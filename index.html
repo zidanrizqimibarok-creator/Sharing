@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHERING SHARING - PREMIIUM</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <style>
+        :root {
+            --primary: #8bc34a;
+            --primary-glow: rgba(139, 195, 74, 0.4);
+            --dark-bg: #101012;
+            --tech-bg: url('https://www.transparenttextures.com/patterns/dark-dot-grid.png');
+            --overlay: rgba(0, 0, 0, 0.95);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100vh;
+            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+            background: var(--dark-bg);
+            background-image: var(--tech-bg);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: none; /* Menyembunyikan cursor browser untuk impresi app */
+        }
+
+        .fade-in { animation: fadeIn 0.8s ease-in forwards; }
+        .fade-out { animation: fadeOut 0.8s ease-out forwards; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+
+        /* --- 1. PREMIUM BOOTING SCREEN --- */
+        #booting {
+            position: fixed; inset: 0; background: white; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .boot-logo {
+            width: 320px;
+            margin-bottom: 50px;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.1));
+            animation: pulse-logo 2.5s ease-in-out infinite;
+        }
+        .boot-slogan {
+            color: var(--dark-bg);
+            font-weight: 900;
+            font-size: 2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeInSlogan 1.5s 1.5s forwards; /* Muncul setelah logo */
+        }
+        @keyframes pulse-logo { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+        @keyframes fadeInSlogan { to { opacity: 1; } }
+
+        /* --- 2. PREMIUM MAIN INTERFACE --- */
+        #app {
+            display: none; height: 100%; width: 100%;
+            flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            z-index: 100;
+        }
+        .main-icon-container {
+            position: relative;
+            margin-bottom: 40px;
+        }
+        .main-icon {
+            width: 250px;
+            filter: drop-shadow(0 0 20px var(--primary-glow));
+            animation: iconGlow 4s infinite alternate;
+        }
+        @keyframes iconGlow { from { filter: drop-shadow(0 0 10px var(--primary-glow)); } to { filter: drop-shadow(0 0 35px var(--primary)); } }
+
+        .app-title {
+            color: var(--primary);
+            font-weight: 800; font-size: 2.8em;
+            margin: 0; letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* --- 3. PREMIUM CUSTOM BUTTONS & MENU --- */
+        .btn-group { display: flex; gap: 30px; margin-top: 50px; cursor: default; }
+        .btn-menu {
+            position: relative;
+            padding: 20px 60px;
+            font-weight: bold; font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 5px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.4s;
+            overflow: hidden;
+            background: rgba(255,255,255,0.03);
+        }
+        .btn-menu:after {
+            content: ''; position: absolute;
+            width: 100%; height: 100%;
+            top: 0; left: -100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: 0.6s;
+        }
+        .btn-menu:hover:after { left: 100%; }
+
+        .btn-send { border-color: #f44336; color: white; background: rgba(244,67,54,0.1); }
+        .btn-send:hover { background: #f44336; box-shadow: 0 0 20px rgba(244,67,54,0.5); }
+
+        .btn-receive { border-color: var(--primary); color: white; background: rgba(139,195,74,0.1); }
+        .btn-receive:hover { background: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
+
+        /* --- 4. CUSTOM TRANSFER OVERLAY & PROGRESS --- */
+        #transfer-box {
+            display: none; position: fixed; inset: 0; background: var(--overlay);
+            z-index: 500; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .progress-circle-container {
+            position: relative; width: 180px; height: 180px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .progress-circle-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 10; }
+        .progress-circle-fill {
+            fill: none; stroke: var(--primary); stroke-width: 10;
+            stroke-dasharray: 502; stroke-dashoffset: 502; /* 2 * PI * r */
+            transition: stroke-dashoffset 0.1s linear;
+            filter: drop-shadow(0 0 10px var(--primary));
+        }
+        .progress-text {
+            position: absolute; font-size: 2em; font-weight: bold;
+            color: white;
+        }
+        #status-text { margin-top: 30px; font-size: 1.2em; color: rgba(255,255,255,0.7); }
+
+        /* --- 5. CUSTOM DIALOG MODALS --- */
+        #custom-dialog {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 2000; align-items: center; justify-content: center;
+        }
+        .dialog-content {
+            background: #1a1a1c; border: 1px solid #333;
+            padding: 30px; border-radius: 8px;
+            text-align: center; width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .dialog-title { color: var(--primary); font-size: 1.5em; margin-bottom: 20px; font-weight: bold; }
+        #dialog-input {
+            width: 100%; padding: 12px;
+            background: #000; border: 1px solid #444;
+            color: white; margin-bottom: 20px; font-size: 1em;
+            border-radius: 4px;
+        }
+        .dialog-btns { display: flex; gap: 15px; justify-content: center; }
+
+    </style>
+</head>
+<body>
+
+    <div id="booting">
+        <img src="https://cdn.phototourl.com/free/2026-03-23-7357efed-c717-4abd-9c87-dcf33b5d3717.png" class="boot-logo" alt="Ligth Studio Developer">
+        <p class="boot-slogan">SATU FILE SATU DETIK</p>
+    </div>
+
+    <div id="app">
+        <div class="main-icon-container">
+            <img src="https://cdn.phototourl.com/free/2026-03-23-40adb230-f8af-4693-9db6-3ce641374609.png" class="main-icon" alt="Zhering Icon">
+        </div>
+        
+        <h1 class="app-title">ZHERING SHARING</h1>
+        
+        <div class="btn-group">
+            <button class="btn-menu btn-send" onclick="showSendDialog()">KIRIM FILE</button>
+            <button class="btn-menu btn-receive" onclick="showReceiveDialog()">TERIMA FILE</button>
+        </div>
+        <p id="peer-id-display" style="margin-top: 30px; font-size: 0.9em; color: rgba(255,255,255,0.4); border-top: 1px solid #222; padding-top: 15px; width: 300px;">Menghubungkan ke jaringan...</p>
+        <input type="file" id="fileInput" style="display: none;">
+    </div>
+
+    <div id="transfer-box">
+        <div class="progress-circle-container">
+            <svg class="progress-svg" viewBox="0 0 170 170">
+                <circle class="progress-circle-bg" cx="85" cy="85" r="80" />
+                <circle class="progress-circle-fill" id="progress-bar" cx="85" cy="85" r="80" />
+            </svg>
+            <div class="progress-text" id="progress-val">0%</div>
+        </div>
+        <h3 id="status-text">Memproses transfer...</h3>
+    </div>
+
+    <div id="custom-dialog">
+        <div class="dialog-content fade-in">
+            <div class="dialog-title" id="dialog-title">Kirim File</div>
+            <p id="dialog-msg">Masukkan ID Penerima</p>
+            <input type="text" id="dialog-input" placeholder="ID Perangkat">
+            <div class="dialog-btns">
+                <button class="btn-menu" style="padding: 10px 30px; font-size: 1em;" onclick="closeCustomDialog()">BATAL</button>
+                <button class="btn-menu btn-receive" style="padding: 10px 30px; font-size: 1em;" id="dialog-confirm-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const boot = document.getElementById('booting');
+        const app = document.getElementById('app');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progress-bar');
+        const progressVal = document.getElementById('progress-val');
+        const transferBox = document.getElementById('transfer-box');
+        const statusText = document.getElementById('status-text');
+        
+        // Custom Dialog Elements
+        const customDialog = document.getElementById('custom-dialog');
+        const dialogInput = document.getElementById('dialog-input');
+        const dialogConfirmBtn = document.getElementById('dialog-confirm-btn');
+
+        // Total Keliling Lingkaran Progress (2 * PI * r)
+        const circumference = 2 * Math.PI * 80;
+
+        // --- Simulasi Booting 5 detik ---
+        setTimeout(() => {
+            boot.classList.add('fade-out');
+            setTimeout(() => {
+                boot.style.display = 'none';
+                app.style.display = 'flex';
+                app.classList.add('fade-in');
+            }, 800);
+        }, 5000); // 5 detik total booting
+
+        // --- P2P Networking Logic (PeerJS) ---
+        const peer = new Peer(); 
+
+        peer.on('open', (id) => {
+            document.getElementById('peer-id-display').innerText = "ID PERANGKAT ANDA: " + id;
+        });
+
+        // --- Notifikasi Browser Dimatikan ---
+        function showSendDialog() {
+            showCustomDialog("Kirim File", "Masukkan ID Penerima (Pastikan penerima sudah mode 'TERIMA FILE')", "CONNECT", (targetId) => {
+                if (!targetId) return showCustomDialog("Error", "ID tidak boleh kosong!", "OK");
+                
+                fileInput.click();
+                fileInput.onchange = () => {
+                    const file = fileInput.files[0];
+                    statusText.innerText = "Menghubungkan ke " + targetId;
+                    showProgress();
+                    
+                    const conn = peer.connect(targetId);
+                    
+                    conn.on('open', () => {
+                        statusText.innerText = "Mengirim " + file.name;
+                        // Kirim data file (P2P maksimum lokal)
+                        conn.send({ file: file, name: file.name, type: file.type });
+                        animateProgress();
+                    });
+
+                    conn.on('error', (err) => {
+                        hideProgress();
+                        showCustomDialog("Gagal Koneksi", "Perangkat tujuan tidak ditemukan.", "OK");
+                    });
+                };
+            });
+        }
+
+        function showReceiveDialog() {
+            showCustomDialog("Mode Terima", "Menunggu kiriman. Berikan ID Anda ke pengirim.", "SIAP", () => {
+                closeCustomDialog();
+            });
+
+            peer.on('connection', (conn) => {
+                showProgress();
+                statusText.innerText = "Menerima kiriman...";
+                
+                conn.on('data', (data) => {
+                    // Animasi dulu, baru trigger download
+                    animateProgress(() => {
+                        const blob = new Blob([data.file]);
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = data.name;
+                        a.click();
+                        
+                        showCustomDialog("Selesai!", "File '" + data.name + "' berhasil diterima.", "OK");
+                        hideProgress();
+                    });
+                });
+            });
+        }
+
+        // --- Custom UI Utilities ---
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100 * circumference);
+            progressBar.style.strokeDashoffset = offset;
+            progressVal.innerText = percent + "%";
+        }
+
+        function showProgress() {
+            transferBox.style.display = 'flex';
+            transferBox.classList.add('fade-in');
+            setProgress(0);
+        }
+
+        function hideProgress() {
+            transferBox.classList.remove('fade-in');
+            transferBox.classList.add('fade-out');
+            setTimeout(() => {
+                transferBox.style.display = 'none';
+                transferBox.classList.remove('fade-out');
+            }, 800);
+        }
+
+        // Animasi 0-100% yang keren dalam 2 detik
+        function animateProgress(callback) {
+            let p = 0;
+            const startTime = Date.now();
+            const duration = 2000; // 2 detik animasi
+
+            function update() {
+                const elapsed = Date.now() - startTime;
+                p = Math.min(Math.floor((elapsed / duration) * 100), 100);
+                setProgress(p);
+
+                if (p < 100) {
+                    requestAnimationFrame(update);
+                } else {
+                    if (callback) callback();
+                    else {
+                        statusText.innerText = "File Berhasil Terkirim!";
+                        setTimeout(hideProgress, 1000);
+                    }
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // Custom Dialog Functions (Anti-Alert/Prompt)
+        function showCustomDialog(title, msg, confirmText, confirmCallback) {
+            document.getElementById('dialog-title').innerText = title;
+            document.getElementById('dialog-msg').innerText = msg;
+            dialogConfirmBtn.innerText = confirmText;
+            
+            // Show/Hide Input based on title
+            if (title === "Kirim File") {
+                dialogInput.style.display = "block";
+                dialogInput.value = "";
+            } else {
+                dialogInput.style.display = "none";
+            }
+
+            customDialog.style.display = "flex";
+
+            dialogConfirmBtn.onclick = () => {
+                if (confirmCallback) confirmCallback(dialogInput.value);
+                else closeCustomDialog();
+            };
+        }
+
+        function closeCustomDialog() {
+            customDialog.style.display = "none";
+        }
+
+    </script>
+</body>
+</html>
