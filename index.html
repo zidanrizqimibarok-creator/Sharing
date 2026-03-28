@@ -41,7 +41,7 @@
     <div id="p-home" class="page">
         <h2 id="disp-name" class="text-xl font-black mb-10"></h2>
         <button onclick="createRoom()" class="w-full bg-indigo-600 p-8 rounded-[32px] mb-4 flex justify-between items-center shadow-lg">
-            <div class="text-left"><h3 class="font-black uppercase">Buat Room</h3><p class="text-[10px] opacity-60">Host Permainan</p></div>
+            <div class="text-left"><h3 class="font-black uppercase">Buat Room</h3><p class="text-[10px] opacity-60">Host Game</p></div>
             <i class="fa-solid fa-plus-circle text-2xl"></i>
         </button>
         <div class="glass p-3 flex gap-2">
@@ -52,14 +52,14 @@
 
     <div id="p-lobby" class="page">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-black text-indigo-400">ID: <span id="lobby-rid"></span></h2>
+            <h2 class="text-xl font-black text-indigo-400 text-sm">ROOM: <span id="lobby-rid"></span></h2>
             <div id="host-opt" class="hidden flex items-center gap-2">
-                <input type="number" id="p-limit" value="3" min="3" max="12" class="w-12 bg-slate-800 p-2 rounded-lg text-center font-bold text-xs border border-indigo-500">
-                <span class="text-[8px] font-black">PLYR</span>
+                <input type="number" id="p-limit" value="3" min="2" max="12" class="w-10 bg-slate-800 p-1 rounded text-center font-bold text-[10px] border border-indigo-500">
+                <span class="text-[8px] font-black">SLOT</span>
             </div>
         </div>
         <div id="lobby-list" class="grid grid-cols-2 gap-3 flex-1 overflow-y-auto mb-6"></div>
-        <button id="btn-start" onclick="triggerStart()" class="w-full bg-indigo-600 py-5 rounded-2xl font-black hidden uppercase">Mulai (3s)</button>
+        <button id="btn-start" onclick="triggerStart()" class="w-full bg-indigo-600 py-5 rounded-2xl font-black hidden uppercase">Mulai Permainan</button>
     </div>
 
     <div id="p-count" class="page items-center justify-center">
@@ -79,7 +79,7 @@
         </div>
         <div id="g-grid" class="grid grid-cols-2 gap-x-3 gap-y-16 flex-1 overflow-y-auto content-start pt-10"></div>
         <div id="g-input" class="mt-4 p-2 glass flex gap-2 rounded-2xl">
-            <input type="text" id="clue-in" placeholder="Ciri-ciri..." class="bg-transparent flex-1 px-3 outline-none text-xs font-bold">
+            <input type="text" id="clue-in" placeholder="Berikan ciri..." class="bg-transparent flex-1 px-3 outline-none text-xs font-bold">
             <button onclick="sendClue()" class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
@@ -148,7 +148,7 @@
                 Object.values(ps).forEach(p => {
                     list.innerHTML += `<div class="glass p-4 text-center text-xs font-black uppercase">${p.name}</div>`;
                 });
-                if(isHost && Object.keys(ps).length >= 1) document.getElementById('btn-start').classList.remove('hidden');
+                if(isHost) document.getElementById('btn-start').classList.remove('hidden');
             });
 
             db.ref(`rooms/${rid}/status`).on('value', s => {
@@ -158,7 +158,7 @@
         }
 
         function triggerStart() {
-            const limit = parseInt(document.getElementById('p-limit').value) || 3;
+            const limit = parseInt(document.getElementById('p-limit').value) || 2;
             db.ref(`rooms/${curRoom}`).update({ status: 'counting', pLimit: limit });
         }
 
@@ -178,7 +178,7 @@
                 const words = await fetchAIWords();
                 const snap = await db.ref(`rooms/${curRoom}`).get();
                 let players = snap.val().players;
-                let limit = snap.val().pLimit || 3;
+                let limit = snap.val().pLimit || 2;
                 
                 const botNames = ["Stenly_X", "Cipher", "Roxie", "Vortex", "Nova"];
                 while(Object.keys(players).length < limit) {
@@ -198,12 +198,15 @@
         }
 
         async function fetchAIWords() {
-            const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "Reply ONLY JSON: {\"citizen\":\"...\", \"spy\":\"...\"}" }] })
-            });
-            const d = await r.json();
-            return JSON.parse(d.choices[0].message.content.match(/\{.*\}/s)[0]);
+            try {
+                const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "Reply ONLY JSON: {\"citizen\":\"...\", \"spy\":\"...\"}" }] })
+                });
+                const d = await r.json();
+                const raw = d.choices[0].message.content;
+                return JSON.parse(raw.match(/\{.*\}/s)[0]);
+            } catch(e) { return { citizen: "Meja", spy: "Kursi" }; }
         }
 
         function startGameLoop() {
@@ -263,12 +266,12 @@
             const target = ps[topId];
 
             if(target.role === 'spy') {
-                document.getElementById('res-title').innerText = "SPY CAUGHT!";
-                document.getElementById('res-desc').innerText = `${target.name} adalah Spy! Citizen Menang.`;
+                document.getElementById('res-title').innerText = "SPY TERBONGKAR!";
+                document.getElementById('res-desc').innerText = `${target.name} adalah Spy! Citizen Win.`;
                 setTimeout(resetForNewRound, 4000);
             } else {
-                document.getElementById('res-title').innerText = "WRONG KICK!";
-                document.getElementById('res-desc').innerText = `${target.name} bukan Spy! Nyawa Citizen sisa 1.`;
+                document.getElementById('res-title').innerText = "SALAH KICK!";
+                document.getElementById('res-desc').innerText = `${target.name} Citizen! Nyawa semua sisa 1.`;
                 Object.keys(ps).forEach(id => { if(ps[id].role === 'citizen') db.ref(`rooms/${curRoom}/players/${id}`).update({ lives: 1 }); });
                 setTimeout(resetForNewRound, 4000);
             }
@@ -280,24 +283,27 @@
                 const words = await fetchAIWords();
                 const snap = await db.ref(`rooms/${curRoom}/players`).get();
                 let ps = snap.val();
+                Object.keys(ps).forEach(id => { ps[id].votes = 0; ps[id].lastClue = ""; });
                 const ids = Object.keys(ps);
                 const spyId = ids[Math.floor(Math.random() * ids.length)];
                 ids.forEach(id => {
                     ps[id].word = (id === spyId) ? words.spy : words.citizen;
                     ps[id].role = (id === spyId) ? 'spy' : 'citizen';
-                    ps[id].lastClue = ""; ps[id].votes = 0;
                 });
                 db.ref(`rooms/${curRoom}`).update({ players: ps, phase: 'diskusi' });
             }
         }
 
         async function handleBotAI(bid, word) {
-            const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `3 words clue for ${word}.` }] })
-            });
-            const d = await r.json();
-            db.ref(`rooms/${curRoom}/players/${bid}`).update({ lastClue: d.choices[0].message.content.trim() });
+            try {
+                const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `3 words clue for: ${word}` }] })
+                });
+                const d = await r.json();
+                const raw = d.choices[0].message.content;
+                db.ref(`rooms/${curRoom}/players/${bid}`).update({ lastClue: raw.trim() });
+            } catch(e) { db.ref(`rooms/${curRoom}/players/${bid}`).update({ lastClue: "Bentuknya umum..." }); }
         }
 
         function castVote(id) { db.ref(`rooms/${curRoom}/players/${id}/votes`).transaction(c => (c || 0) + 1); }
