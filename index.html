@@ -14,45 +14,72 @@
         .page { position: fixed; inset: 0; display: none; flex-direction: column; padding: 20px; background: #0F172A; }
         .active-page { display: flex; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
-        .player-card { background: white; color: #1E293B; border-radius: 16px; padding: 12px; text-align: center; position: relative; width: 100%; max-width: 120px; margin: auto; transition: 0.3s; }
-        .clue-bubble { position: absolute; bottom: 115%; left: 50%; transform: translateX(-50%); background: #6366F1; color: white; padding: 6px 12px; border-radius: 14px; font-size: 10px; font-weight: 800; min-width: 90px; max-width: 140px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); display: none; z-index: 100; }
-        .clue-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #6366F1; }
-        .vote-btn { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #EF4444; color: white; padding: 2px 8px; border-radius: 6px; font-size: 8px; font-weight: 900; cursor: pointer; display: none; z-index: 110; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-        #sync-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .timer-bar { height: 4px; background: #6366F1; width: 100%; transition: width 1s linear; }
+        
+        .player-card { background: white; color: #1E293B; border-radius: 16px; padding: 12px; text-align: center; position: relative; width: 100%; max-width: 110px; margin: auto; transition: 0.3s; }
+        .player-card.voted { border: 3px solid #F43F5E; box-shadow: 0 0 15px #F43F5E; }
+        
+        .clue-bubble { 
+            position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); 
+            background: #6366F1; color: white; padding: 6px 10px; border-radius: 12px; 
+            font-size: 9px; font-weight: 800; min-width: 80px; max-width: 120px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); display: none; z-index: 100;
+        }
+        .clue-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #6366F1; }
+        
+        .btn-vote { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #F43F5E; color: white; font-size: 8px; font-weight: 900; padding: 2px 8px; border-radius: 20px; cursor: pointer; display: none; z-index: 110; border: 1px solid white; }
+        
+        #sync-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .timer-bar { height: 4px; background: #6366F1; transition: width 1s linear; border-radius: 2px; }
+        
+        #no-signal { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="sync-overlay"><div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-500 mb-4"></div><p class="text-[10px] font-black uppercase tracking-widest">Processing Session...</p></div>
+    <div id="no-signal">
+        <h2 class="text-2xl font-black italic">NO SIGNAL</h2>
+        <p class="text-[10px] opacity-50 mt-2 uppercase tracking-[0.5em]">Offline</p>
+    </div>
+
+    <div id="sync-overlay">
+        <div id="sync-icon" class="text-5xl mb-4 text-indigo-500"><i class="fa-solid fa-bolt"></i></div>
+        <h2 id="sync-title" class="text-xl font-black italic mb-2 uppercase">Syncing...</h2>
+        <p id="sync-desc" class="text-xs opacity-60 font-bold uppercase tracking-widest"></p>
+    </div>
 
     <div id="p-login" class="page active-page items-center justify-center">
         <div class="glass p-8 w-full max-w-sm text-center">
             <h1 class="text-3xl font-black mb-6 italic tracking-tighter">SPY<span class="text-indigo-500">mobile</span></h1>
             <input type="text" id="user-name" placeholder="Nickname..." class="w-full bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700 outline-none font-bold">
-            <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-black uppercase">Masuk Game</button>
+            <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-black uppercase">Start Game</button>
         </div>
     </div>
 
     <div id="p-home" class="page">
-        <div class="flex justify-between items-center mb-10"><h2 id="disp-name" class="text-xl font-black"></h2><div class="w-2 h-2 rounded-full bg-green-500"></div></div>
-        <button onclick="createRoom()" class="w-full bg-indigo-600 p-8 rounded-[32px] mb-4 flex justify-between items-center">
-            <div class="text-left"><h3 class="font-black">Buat Room</h3><p class="text-[10px] opacity-60 font-bold uppercase">Setup Game</p></div>
+        <div class="flex justify-between items-center mb-10">
+            <h2 id="disp-name" class="text-xl font-black"></h2>
+            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_green]"></div>
+        </div>
+        <button onclick="createRoom()" class="w-full bg-indigo-600 p-8 rounded-[32px] mb-4 flex justify-between items-center shadow-lg">
+            <div class="text-left"><h3 class="font-black uppercase">Buat Room</h3><p class="text-[10px] opacity-60 font-bold">Main Bareng Teman/AI</p></div>
             <i class="fa-solid fa-plus-circle text-2xl"></i>
         </button>
-        <div class="glass p-3 flex gap-2"><input type="number" id="room-input" placeholder="ID Room" class="bg-transparent flex-1 px-2 outline-none font-bold text-sm"><button onclick="joinRoom()" class="bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black">JOIN</button></div>
+        <div class="glass p-3 flex gap-2">
+            <input type="number" id="room-input" placeholder="ID Room" class="bg-transparent flex-1 px-2 outline-none font-bold text-sm">
+            <button onclick="joinRoom()" class="bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase">Join</button>
+        </div>
     </div>
 
     <div id="p-lobby" class="page">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-black text-indigo-400">ID: <span id="lobby-rid"></span></h2>
+            <h2 class="text-xl font-black text-indigo-400">ROOM ID: <span id="lobby-rid"></span></h2>
             <div id="host-controls" class="hidden flex items-center gap-2">
                 <input type="number" id="player-limit" value="3" min="3" max="12" class="w-12 bg-slate-800 p-2 rounded-lg text-center font-bold text-xs border border-indigo-500">
-                <button onclick="updatePlayerLimit()" class="bg-indigo-600 p-2 rounded-lg text-[8px] font-black uppercase">Set</button>
+                <button onclick="updatePlayerLimit()" class="bg-indigo-600 px-3 py-2 rounded-lg text-[8px] font-black uppercase">SET</button>
             </div>
         </div>
         <div id="lobby-list" class="grid grid-cols-2 gap-3 flex-1 overflow-y-auto mb-6"></div>
-        <button id="btn-play" onclick="triggerStart()" class="w-full bg-indigo-600 py-5 rounded-2xl font-black hidden uppercase tracking-widest">Mulai (3-2-1)</button>
+        <button id="btn-play" onclick="triggerStart()" class="w-full bg-indigo-600 py-5 rounded-2xl font-black hidden uppercase">Mulai Sekarang</button>
     </div>
 
     <div id="p-count" class="page items-center justify-center">
@@ -60,193 +87,286 @@
     </div>
 
     <div id="p-game" class="page">
-        <div class="flex justify-between items-center mb-4">
-            <div id="game-lives" class="flex gap-1 text-rose-500"></div>
-            <div class="flex flex-col items-end">
-                <div id="phase-tag" class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full text-[9px] font-black uppercase">Diskusi (30s)</div>
-                <div id="timer-num" class="text-xs font-black mt-1">30</div>
+        <div class="flex flex-col mb-4">
+            <div class="flex justify-between items-center mb-1">
+                <div id="game-lives" class="flex gap-1 text-rose-500"></div>
+                <div id="phase-tag" class="bg-indigo-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase">Diskusi (30s)</div>
             </div>
+            <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div id="game-timer-bar" class="timer-bar w-full"></div></div>
         </div>
-        <div class="timer-bar mb-6" id="session-bar"></div>
-        <div class="glass p-6 text-center mb-10 border-indigo-500/30 border-2">
-            <h2 id="g-word" class="text-2xl font-black text-white">????</h2>
+        
+        <div class="glass p-5 text-center mb-10 border-indigo-500/30 border-2">
+            <h2 id="g-word" class="text-2xl font-black text-white tracking-widest">????</h2>
         </div>
-        <div id="g-grid" class="grid grid-cols-2 gap-x-4 gap-y-16 flex-1 overflow-y-auto content-start pt-10"></div>
-        <div id="chat-area" class="mt-4 p-2 glass flex gap-2 rounded-2xl border-t border-white/10">
-            <input type="text" id="clue-in" placeholder="Ketik ciri-ciri..." class="bg-transparent flex-1 px-3 outline-none text-xs font-bold text-white">
+
+        <div id="g-grid" class="grid grid-cols-2 gap-x-3 gap-y-16 flex-1 overflow-y-auto content-start pt-10 pb-20"></div>
+
+        <div id="input-area" class="mt-4 p-2 glass flex gap-2 rounded-2xl border-t border-white/10">
+            <input type="text" id="clue-in" placeholder="Berikan ciri-ciri..." class="bg-transparent flex-1 px-3 outline-none text-xs font-bold text-white">
             <button onclick="sendClue()" class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc", authDomain: "xbook-global26.firebaseapp.com", databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "xbook-global26" };
+        const firebaseConfig = {
+            apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
+            authDomain: "xbook-global26.firebaseapp.com",
+            databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "xbook-global26"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const OR_KEY = "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";
 
         let user = { id: localStorage.getItem('sid'), name: localStorage.getItem('sname'), lives: 2 };
-        let curRoom = null, isHost = false, gameTimer = null;
+        let curRoom = null; let isHost = false; let gameTimer = null;
+
+        db.ref(".info/connected").on("value", s => document.getElementById('no-signal').style.display = s.val() ? 'none' : 'flex');
 
         window.onload = () => { if(!user.id) showPage('login'); else loadHome(); };
-        function login() { const n = document.getElementById('user-name').value; if(n.length < 2) return; user.id = "U" + Date.now(); user.name = n; localStorage.setItem('sid', user.id); localStorage.setItem('sname', user.name); loadHome(); }
+
+        function login() {
+            const n = document.getElementById('user-name').value;
+            if(n.length < 2) return;
+            user.id = "U" + Math.floor(1000 + Math.random() * 9000);
+            user.name = n;
+            localStorage.setItem('sid', user.id);
+            localStorage.setItem('sname', user.name);
+            loadHome();
+        }
+
         function loadHome() { showPage('home'); document.getElementById('disp-name').innerText = user.name; }
-        function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page')); document.getElementById('p-' + id).classList.add('active-page'); }
-        
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+            document.getElementById('p-' + id).classList.add('active-page');
+        }
+
         function createRoom() {
             const rid = Math.floor(10000 + Math.random() * 90000).toString();
             curRoom = rid; isHost = true;
-            db.ref('rooms/' + rid).set({ status: 'lobby', host: user.id, playerLimit: 3, phase: 'discussion', timeLeft: 30, players: { [user.id]: { name: user.name, lives: 2, isBot: false } } });
+            db.ref('rooms/' + rid).set({
+                status: 'lobby', host: user.id, playerLimit: 3, phase: 'diskusi',
+                players: { [user.id]: { name: user.name, lives: 2, isBot: false, isOut: false } }
+            });
             openLobby(rid);
         }
 
         function joinRoom() {
             const rid = document.getElementById('room-input').value;
-            db.ref('rooms/' + rid).once('value', s => { if(s.exists()){ curRoom = rid; isHost = false; db.ref(`rooms/${rid}/players/${user.id}`).set({ name: user.name, lives: 2, isBot: false }); openLobby(rid); } });
+            db.ref('rooms/' + rid).once('value', s => {
+                if(s.exists()){
+                    curRoom = rid; isHost = false;
+                    db.ref(`rooms/${rid}/players/${user.id}`).set({ name: user.name, lives: 2, isBot: false, isOut: false });
+                    openLobby(rid);
+                } else alert("Room tidak ditemukan!");
+            });
         }
 
         function updatePlayerLimit() {
-            const v = parseInt(document.getElementById('player-limit').value);
+            const val = parseInt(document.getElementById('player-limit').value);
             document.getElementById('sync-overlay').style.display = 'flex';
-            db.ref(`rooms/${curRoom}`).update({ playerLimit: v }).then(() => setTimeout(() => document.getElementById('sync-overlay').style.display = 'none', 500));
+            document.getElementById('sync-desc').innerText = "Updating Room Config...";
+            db.ref(`rooms/${curRoom}`).update({ playerLimit: val }).then(() => {
+                setTimeout(() => { document.getElementById('sync-overlay').style.display = 'none'; }, 500);
+            });
         }
 
         function openLobby(rid) {
-            showPage('lobby'); document.getElementById('lobby-rid').innerText = rid;
+            showPage('lobby');
+            document.getElementById('lobby-rid').innerText = rid;
             if(isHost) document.getElementById('host-controls').classList.remove('hidden');
+            
             db.ref(`rooms/${rid}/players`).on('value', s => {
-                const list = document.getElementById('lobby-list'); list.innerHTML = "";
-                const ps = s.val() || {}; Object.values(ps).forEach(p => list.innerHTML += `<div class="glass p-4 text-center text-xs font-black uppercase">${p.name}</div>`);
+                const list = document.getElementById('lobby-list');
+                list.innerHTML = "";
+                const ps = s.val() || {};
+                Object.values(ps).forEach(p => {
+                    list.innerHTML += `<div class="glass p-4 text-center text-xs font-black uppercase">${p.name}</div>`;
+                });
                 if(isHost) document.getElementById('btn-play').classList.remove('hidden');
             });
-            db.ref(`rooms/${rid}/status`).on('value', s => { if(s.val()==='counting') runCountdown(); if(s.val()==='playing') runGameUI(); });
+
+            db.ref(`rooms/${rid}/status`).on('value', s => { 
+                if(s.val() === 'counting') runCountdown();
+                if(s.val() === 'playing') runGameLoop();
+            });
         }
 
-        function triggerStart() { db.ref(`rooms/${curRoom}`).update({ status: 'counting' }); }
+        function triggerStart() {
+            db.ref(`rooms/${curRoom}`).update({ status: 'counting' });
+        }
 
         async function runCountdown() {
-            showPage('count'); let c = 3;
-            const t = setInterval(() => { c--; if(c>0) document.getElementById('count-num').innerText = c; else { clearInterval(t); if(isHost) setupMatch(); } }, 1000);
-        }
-
-        async function setupMatch() {
-            const words = await fetchAIWords();
-            const snap = await db.ref(`rooms/${curRoom}`).get();
-            const rd = snap.val();
-            let players = rd.players;
-            let limit = rd.playerLimit || 3;
-            
-            // Bot Filler
-            const bots = ["Stenly_X", "Cipher", "Roxie", "Vortex", "Shadow", "Nova"];
-            while(Object.keys(players).length < limit) {
-                const bid = "BOT_" + Math.random().toString(36).substr(2,4);
-                players[bid] = { name: bots.pop() || "Bot", lives: 2, isBot: true };
-            }
-
-            const ids = Object.keys(players);
-            const spyId = ids[Math.floor(Math.random() * ids.length)];
-            ids.forEach(id => {
-                players[id].word = (id === spyId) ? words.spy : words.citizen;
-                players[id].role = (id === spyId) ? 'spy' : 'citizen';
-                players[id].lastClue = ""; players[id].votes = 0;
-            });
-
-            db.ref(`rooms/${curRoom}`).update({ players, status: 'playing', phase: 'discussion', timeLeft: 30 });
-            if(isHost) startSessionTimer();
-        }
-
-        function startSessionTimer() {
-            if(gameTimer) clearInterval(gameTimer);
-            gameTimer = setInterval(async () => {
-                const s = await db.ref(`rooms/${curRoom}`).get();
-                const rd = s.val();
-                let time = rd.timeLeft - 1;
-                if(time <= 0) {
-                    if(rd.phase === 'discussion') {
-                        db.ref(`rooms/${curRoom}`).update({ phase: 'voting', timeLeft: 20 });
-                    } else {
-                        handleVoteResult();
-                    }
-                } else {
-                    db.ref(`rooms/${curRoom}`).update({ timeLeft: time });
+            showPage('count');
+            let c = 3;
+            const t = setInterval(() => {
+                c--;
+                if(c > 0) document.getElementById('count-num').innerText = c;
+                else {
+                    clearInterval(t);
+                    if(isHost) db.ref(`rooms/${curRoom}`).update({ status: 'playing' });
                 }
             }, 1000);
-        }
+            
+            if(isHost) {
+                const words = await fetchAIWords();
+                const snap = await db.ref(`rooms/${curRoom}`).get();
+                const rd = snap.val();
+                let players = rd.players;
+                let limit = rd.playerLimit || 3;
 
-        async function handleVoteResult() {
-            const s = await db.ref(`rooms/${curRoom}`).get();
-            const rd = s.val();
-            const players = rd.players;
-            let mostVotedId = null, maxVotes = -1;
+                const botNames = ["Stenly_X", "Vortex", "Cipher", "Roxie", "Nova"];
+                while(Object.keys(players).length < limit) {
+                    const bid = "BOT_" + Math.random().toString(36).substr(2, 4);
+                    players[bid] = { name: botNames.pop() || "COM", lives: 2, isBot: true, isOut: false };
+                }
 
-            Object.keys(players).forEach(id => {
-                if(players[id].votes > maxVotes) { maxVotes = players[id].votes; mostVotedId = id; }
-            });
-
-            if(players[mostVotedId].role === 'spy') {
-                // Spy Kicked, Citizen Win Session
-                alert("SPY TERBONGKAR: " + players[mostVotedId].name);
-                setupMatch(); // Reset Next Round
-            } else {
-                // Wrong Kick, Citizens Lose Health
-                alert("SALAH KICK! " + players[mostVotedId].name + " Bukan Spy.");
-                Object.keys(players).forEach(id => {
-                    if(players[id].role === 'citizen') players[id].lives = 1;
+                const ids = Object.keys(players);
+                const spyId = ids[Math.floor(Math.random() * ids.length)];
+                ids.forEach(id => {
+                    players[id].word = (id === spyId) ? words.spy : words.citizen;
+                    players[id].role = (id === spyId) ? 'spy' : 'citizen';
+                    players[id].lastClue = ""; players[id].votes = 0;
                 });
-                db.ref(`rooms/${curRoom}/players`).set(players);
-                setupMatch();
+                db.ref(`rooms/${curRoom}`).update({ players: players, phase: 'diskusi' });
             }
         }
 
-        function runGameUI() {
+        async function fetchAIWords() {
+            try {
+                const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "Reply ONLY JSON: {\"citizen\":\"...\", \"spy\":\"...\"} using similar but different items." }] })
+                });
+                const d = await r.json();
+                return JSON.parse(d.choices[0].message.content.match(/\{.*\}/s)[0]);
+            } catch (e) { return { citizen: "Kucing", spy: "Harimau" }; }
+        }
+
+        function runGameLoop() {
             showPage('game');
             db.ref(`rooms/${curRoom}`).on('value', s => {
-                const rd = s.val(); if(!rd) return;
+                const rd = s.val();
+                if(!rd || !rd.players[user.id]) return;
+                
+                const grid = document.getElementById('g-grid');
+                grid.innerHTML = "";
                 const ps = rd.players;
-                document.getElementById('phase-tag').innerText = `${rd.phase} (${rd.timeLeft}s)`;
-                document.getElementById('timer-num').innerText = rd.timeLeft;
-                document.getElementById('session-bar').style.width = (rd.timeLeft / (rd.phase === 'discussion' ? 30 : 20) * 100) + "%";
                 document.getElementById('g-word').innerText = ps[user.id].word;
-                document.getElementById('chat-area').style.display = (rd.phase === 'discussion') ? 'flex' : 'none';
+                document.getElementById('phase-tag').innerText = rd.phase.toUpperCase();
 
-                const grid = document.getElementById('g-grid'); grid.innerHTML = "";
                 Object.keys(ps).forEach(pid => {
                     const p = ps[pid];
+                    if(p.isOut) return;
                     grid.innerHTML += `
-                        <div class="player-card shadow-lg relative">
-                            <div class="vote-btn" style="display:${rd.phase === 'voting' && pid !== user.id ? 'block' : 'none'}" onclick="castVote('${pid}')">VOTE RED</div>
+                        <div class="player-card shadow-lg ${p.votedBy === user.id ? 'voted' : ''}">
+                            <div class="btn-vote" style="display:${rd.phase === 'vote' ? 'block' : 'none'}" onclick="votePlayer('${pid}')">VOTE RED</div>
                             <div id="bubble-${pid}" class="clue-bubble">${p.lastClue || ''}</div>
-                            <div class="w-12 h-12 bg-indigo-600 text-white rounded-full mx-auto mb-2 flex items-center justify-center font-black">${p.name[0]}</div>
-                            <h4 class="text-[9px] font-black uppercase truncate">${p.name}</h4>
-                            <div class="text-[8px] mt-1">${'❤️'.repeat(p.lives)}</div>
+                            <div class="w-10 h-10 bg-indigo-600 text-white rounded-full mx-auto mb-1 flex items-center justify-center font-black">${p.name[0]}</div>
+                            <h4 class="text-[8px] font-black uppercase truncate px-1">${p.name}</h4>
+                            <div class="text-[7px] mt-1">${'❤️'.repeat(p.lives)}</div>
                         </div>`;
                     if(p.lastClue) document.getElementById(`bubble-${pid}`).style.display = 'block';
                     
-                    // Bot logic
-                    if(isHost && p.isBot && rd.phase === 'discussion' && !p.lastClue) {
+                    if(isHost && p.isBot && !p.lastClue && rd.phase === 'diskusi') {
                         setTimeout(() => handleBotAI(pid, p.word), Math.random() * 5000 + 3000);
                     }
                 });
+
+                if(isHost) syncTimer(rd.phase);
             });
             renderLives();
         }
 
-        async function castVote(pid) {
-            db.ref(`rooms/${curRoom}/players/${pid}/votes`).transaction(c => (c || 0) + 1);
-            alert("Vote Berhasil!");
+        function syncTimer(phase) {
+            if(gameTimer) return;
+            let time = phase === 'diskusi' ? 30 : 20;
+            const bar = document.getElementById('game-timer-bar');
+            gameTimer = setInterval(() => {
+                time--;
+                bar.style.width = (time / (phase === 'diskusi' ? 30 : 20) * 100) + "%";
+                if(time <= 0) {
+                    clearInterval(gameTimer);
+                    gameTimer = null;
+                    if(phase === 'diskusi') db.ref(`rooms/${curRoom}`).update({ phase: 'vote' });
+                    else processVoteResult();
+                }
+            }, 1000);
         }
 
-        async function fetchAIWords() {
-            const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "Reply ONLY JSON: {\"citizen\":\"...\", \"spy\":\"...\"} with 2 similar items." }] }) });
-            const d = await r.json(); return JSON.parse(d.choices[0].message.content.match(/\{.*\}/s)[0]);
+        async function processVoteResult() {
+            const s = await db.ref(`rooms/${curRoom}`).get();
+            const rd = s.val();
+            const ps = rd.players;
+            let maxVotes = -1; let targetId = null;
+
+            Object.keys(ps).forEach(id => {
+                if(ps[id].votes > maxVotes) { maxVotes = ps[id].votes; targetId = id; }
+            });
+
+            document.getElementById('sync-overlay').style.display = 'flex';
+            document.getElementById('sync-title').innerText = "SPILL RESULT";
+            
+            const target = ps[targetId];
+            if(target.role === 'spy') {
+                document.getElementById('sync-desc').innerText = `${target.name} IS THE SPY! Citizen Win!`;
+                setTimeout(() => nextRound(true), 3000);
+            } else {
+                document.getElementById('sync-desc').innerText = `${target.name} IS CITIZEN! Spy won this round.`;
+                Object.keys(ps).forEach(id => {
+                    if(ps[id].role === 'citizen') db.ref(`rooms/${curRoom}/players/${id}`).update({ lives: 1 });
+                });
+                setTimeout(() => nextRound(false), 3000);
+            }
+        }
+
+        async function nextRound(spyCaught) {
+            document.getElementById('sync-overlay').style.display = 'none';
+            if(isHost) {
+                const words = await fetchAIWords();
+                const s = await db.ref(`rooms/${curRoom}/players`).get();
+                let ps = s.val();
+                const ids = Object.keys(ps);
+                const spyId = ids[Math.floor(Math.random() * ids.length)];
+                
+                ids.forEach(id => {
+                    ps[id].word = (id === spyId) ? words.spy : words.citizen;
+                    ps[id].role = (id === spyId) ? 'spy' : 'citizen';
+                    ps[id].lastClue = ""; ps[id].votes = 0; ps[id].votedBy = null;
+                });
+                db.ref(`rooms/${curRoom}`).update({ players: ps, phase: 'diskusi' });
+            }
         }
 
         async function handleBotAI(botId, word) {
-            const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `Short clue (3 words) for ${word}.` }] }) });
-            const d = await r.json(); db.ref(`rooms/${curRoom}/players/${botId}`).update({ lastClue: d.choices[0].message.content.replace(/"/g, '').trim() });
+            try {
+                const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `Short clue (3 words max) for ${word}. No name.` }] })
+                });
+                const d = await r.json();
+                db.ref(`rooms/${curRoom}/players/${botId}`).update({ lastClue: d.choices[0].message.content.trim() });
+            } catch (e) {}
         }
 
-        function sendClue() { const v = document.getElementById('clue-in').value; if(!v) return; db.ref(`rooms/${curRoom}/players/${user.id}`).update({ lastClue: v }); document.getElementById('clue-in').value = ""; }
-        function renderLives() { const l = document.getElementById('game-lives'); l.innerHTML = ""; for(let i=0; i<user.lives; i++) l.innerHTML += '<i class="fa-solid fa-heart"></i>'; }
+        function votePlayer(id) {
+            db.ref(`rooms/${curRoom}/players/${id}/votes`).transaction(c => (c || 0) + 1);
+            db.ref(`rooms/${curRoom}/players/${user.id}`).update({ votedBy: id });
+        }
+
+        function sendClue() {
+            const v = document.getElementById('clue-in').value;
+            if(!v) return;
+            db.ref(`rooms/${curRoom}/players/${user.id}`).update({ lastClue: v });
+            document.getElementById('clue-in').value = "";
+        }
+
+        function renderLives() {
+            const l = document.getElementById('game-lives');
+            l.innerHTML = "";
+            for(let i=0; i<user.lives; i++) l.innerHTML += '<i class="fa-solid fa-heart"></i>';
+        }
     </script>
 </body>
 </html>
