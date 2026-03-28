@@ -2,245 +2,374 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ZLA AI - REALTIME LOBBY & RANK</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Who The Spy | Multiplayer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { --p: #FF78C4; --s: #9DE219; --a: #4CC9FE; --y: #FFF9C4; --d: #2D3436; --w: #FFFFFF; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--a); font-family: 'Fredoka', sans-serif; }
-        #viewport-fix { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        .stage { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .stage.active { display: flex; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .card { background: white; padding: 20px; border-radius: 30px; border: 5px solid var(--d); box-shadow: 8px 8px 0px var(--d); width: 95%; max-width: 340px; text-align: center; position: relative; }
-        .title-text { font-size: 2.5rem; color: white; text-shadow: 4px 4px 0 var(--d); -webkit-text-stroke: 1.5px var(--d); margin-bottom: 20px; }
-        
-        .btn-main { background: var(--s); padding: 15px; width: 100%; border: 4px solid var(--d); border-radius: 18px; cursor: pointer; font-weight: 900; box-shadow: 0 6px 0 var(--d); margin-top: 10px; color: var(--d); }
-        .btn-main:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--d); }
-        
-        .inp-field { width: 100%; padding: 12px; margin: 8px 0; border: 4px solid var(--d); border-radius: 15px; font-weight: bold; text-align: center; }
-        textarea { height: 100px; font-family: monospace; font-size: 11px; }
-
-        /* LOBBY LIST */
-        .player-tag { background: var(--y); border: 3px solid var(--d); padding: 8px 15px; border-radius: 12px; margin: 5px; display: inline-block; font-weight: bold; animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
-
-        /* RANKING ANIMATION */
-        .rank-item { background: white; border: 4px solid var(--d); padding: 12px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: 900; transform: translateX(-100px); opacity: 0; transition: 0.5s; }
-        .rank-item.show { transform: translateX(0); opacity: 1; }
-        .rank-1 { background: #ffd700; }
-
-        #zla-toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; background: #ff4757; color: white; padding: 12px; border-radius: 15px; border: 4px solid var(--d); z-index: 10000; text-align: center; transition: 0.4s; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0F172A; color: white; margin: 0; overflow: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; }
+        .page { position: fixed; inset: 0; display: flex; flex-direction: column; transition: 0.5s; padding: 20px; z-index: 10; }
+        .hidden-page { transform: translateX(100%); opacity: 0; pointer-events: none; }
+        .heart { color: #F43F5E; text-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
+        .btn-primary { background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%); transition: 0.3s; }
+        .btn-primary:active { transform: scale(0.95); }
+        #notif-area { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; }
     </style>
 </head>
 <body>
 
-<div id="zla-toast">NOTIFIKASI</div>
+    <div id="notif-area"></div>
 
-<div id="viewport-fix">
-    <div id="main-app" style="width:100%; height:100%;">
-        <div id="stage-login" class="stage active">
-            <h1 class="title-text">LIQU IDEA</h1>
-            <div class="card">
-                <input type="text" id="player-name" class="inp-field" placeholder="Nama Kamu...">
-                <button class="btn-main" onclick="zla.login()">MASUK</button>
-            </div>
-        </div>
-
-        <div id="stage-menu" class="stage">
-            <div class="card">
-                <button class="btn-main" onclick="zla.go('stage-host')">BUAT ROOM</button>
-                <button class="btn-main" style="background:var(--p)" onclick="zla.go('stage-join')">GABUNG ROOM</button>
-            </div>
-        </div>
-
-        <div id="stage-host" class="stage">
-            <div class="card">
-                <h3>INPUT JSON SOAL</h3>
-                <textarea id="manual-json" class="inp-field" placeholder='{"data":[{"q":"Soal?","o":["A","B","C","D"],"a":"A"}]}'></textarea>
-                <button class="btn-main" onclick="zla.createRoom()">BUAT & SYNC</button>
-            </div>
-        </div>
-
-        <div id="stage-join" class="stage">
-            <div class="card">
-                <h3>KODE ROOM</h3>
-                <input type="number" id="join-code" class="inp-field">
-                <button class="btn-main" onclick="zla.joinRoom()">GABUNG</button>
-            </div>
-        </div>
-
-        <div id="stage-lobby" class="stage">
-            <div class="card">
-                <h2 id="v-room-id" style="background:var(--d); color:var(--s); padding:10px; border-radius:10px;">ROOM: ----</h2>
-                <p>Pemain yang Join:</p>
-                <div id="player-list" style="margin: 15px 0; min-height: 50px;"></div>
-                <div id="host-tools" style="display:none">
-                    <button class="btn-main" onclick="zla.startGame()">MULAI SEKARANG</button>
-                </div>
-                <p id="wait-msg">Menunggu Host...</p>
-            </div>
-        </div>
-
-        <div id="stage-quiz" class="stage">
-            <div class="card">
-                <div id="v-question" style="font-weight:900; margin-bottom:20px;">...</div>
-                <div id="v-options"></div>
-            </div>
-        </div>
-
-        <div id="stage-rank" class="stage">
-            <h1 class="title-text">PAPAN SKOR</h1>
-            <div class="card" id="rank-container" style="background:none; border:none; box-shadow:none;"></div>
-            <button class="btn-main" onclick="location.reload()">MAIN LAGI</button>
+    <div id="name-modal" class="fixed inset-0 bg-slate-900 z-[9000] flex items-center justify-center p-6 hidden">
+        <div class="glass p-8 w-full max-w-md text-center">
+            <h2 class="text-2xl font-black mb-4">Siapa Nama Kamu?</h2>
+            <input type="text" id="user-name-input" placeholder="Masukkan Nickname..." class="w-full bg-slate-800 p-4 rounded-xl mb-4 outline-none border border-slate-700 focus:border-indigo-500">
+            <button onclick="saveProfile()" class="btn-primary w-full py-4 rounded-xl font-bold uppercase tracking-widest">Simpan & Mulai</button>
         </div>
     </div>
-</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <div id="page-home" class="page">
+        <div class="flex justify-between items-center mb-10">
+            <div><h1 class="text-2xl font-black italic">WHO <span class="text-indigo-400">THE SPY</span></h1><p id="display-name" class="text-[10px] text-slate-400 font-bold uppercase"></p></div>
+            <button onclick="showPage('settings')" class="text-xl p-2"><i class="fa-solid fa-gear"></i></button>
+        </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
-  authDomain: "xbook-global26.firebaseapp.com",
-  databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "xbook-global26",
-  storageBucket: "xbook-global26.firebasestorage.app",
-  messagingSenderId: "384795261277",
-  appId: "1:384795261277:web:6a2b05dbea819b4f4590b4"
-};
+        <div class="grid gap-4 mb-8">
+            <button onclick="createRoom()" class="btn-primary p-6 rounded-[30px] flex items-center justify-between">
+                <div class="text-left">
+                    <h3 class="font-black text-lg">Buat Room</h3>
+                    <p class="text-[10px] opacity-70">ID Otomatis 5 Digit</p>
+                </div>
+                <i class="fa-solid fa-plus-circle text-3xl"></i>
+            </button>
+            <div class="glass p-4 flex gap-2">
+                <input type="number" id="join-id" placeholder="Masukkan ID Room..." class="flex-1 bg-transparent px-2 outline-none text-sm font-bold">
+                <button onclick="joinRoom()" class="bg-indigo-500 px-6 py-2 rounded-xl text-[10px] font-black">MASUK</button>
+            </div>
+        </div>
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+        <div class="flex-1 overflow-y-auto">
+            <h3 class="text-xs font-black text-slate-500 mb-4 uppercase tracking-widest">Teman / Follower</h3>
+            <div id="friends-list" class="space-y-3"></div>
+            <div class="mt-6">
+                <input type="text" id="find-id" placeholder="Cari ID Teman (4 Digit)..." class="w-full bg-slate-800/50 p-3 rounded-xl text-xs mb-2">
+                <button onclick="followUser()" class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">+ Follow via ID</button>
+            </div>
+        </div>
+    </div>
 
-window.zla = {
-    user: { name: "", score: 0, id: "" },
-    roomCode: "",
-    questions: [],
-    index: 0,
+    <div id="page-lobby" class="page hidden-page">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-black">Room ID: <span id="room-id-display" class="text-indigo-400"></span></h2>
+            <button onclick="leaveRoom()" class="text-rose-500 font-bold text-xs uppercase">Keluar</button>
+        </div>
+        <div id="player-list" class="flex-1 grid grid-cols-2 gap-4 overflow-y-auto mb-6"></div>
+        <div class="p-4 glass text-center mb-6">
+            <p id="lobby-status" class="text-[10px] font-bold text-slate-400 uppercase"></p>
+        </div>
+        <button id="start-btn" onclick="startGame()" class="btn-primary w-full py-5 rounded-2xl font-black uppercase tracking-widest hidden">Mulai Permainan</button>
+    </div>
 
-    go(id) {
-        document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    },
+    <div id="page-game" class="page hidden-page">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex gap-2" id="game-lives"></div>
+            <div id="timer" class="bg-slate-800 px-4 py-1 rounded-full text-[10px] font-bold">00:00</div>
+        </div>
 
-    login() {
-        const n = document.getElementById('player-name').value.trim();
-        if(!n) return;
-        this.user.name = n;
-        this.user.id = "p_" + Date.now();
-        this.go('stage-menu');
-    },
+        <div id="word-card" class="glass p-8 text-center mb-6 border-2 border-indigo-500/50">
+            <p class="text-[10px] text-slate-400 uppercase font-black mb-2">Kata Kunci Kamu:</p>
+            <h2 id="secret-word" class="text-3xl font-black tracking-tighter">????</h2>
+        </div>
 
-    createRoom() {
-        const jsonRaw = document.getElementById('manual-json').value;
-        try {
-            const parsed = JSON.parse(jsonRaw);
-            this.questions = parsed.data;
-            this.roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        <div id="chat-game" class="flex-1 overflow-y-auto mb-4 space-y-2"></div>
+        
+        <div id="input-area" class="p-2 glass rounded-full flex gap-2">
+            <input type="text" id="clue-input" placeholder="Berikan ciri-ciri..." class="flex-1 bg-transparent px-4 text-xs outline-none">
+            <button onclick="sendClue()" class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+
+        <div id="vote-overlay" class="absolute inset-0 bg-slate-900/95 z-50 p-6 flex flex-col hidden">
+            <h2 class="text-2xl font-black text-center mb-6">SIAPA SPY-NYA?</h2>
+            <div id="vote-list" class="grid gap-3 flex-1 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="page-settings" class="page hidden-page">
+        <button onclick="showPage('home')" class="mb-8 text-slate-400"><i class="fa-solid fa-arrow-left"></i> Kembali</button>
+        <h2 class="text-3xl font-black mb-10">Pengaturan</h2>
+        <div class="space-y-6">
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase">Ubah Nama</label>
+                <input type="text" id="setting-name" class="w-full bg-slate-800 p-4 rounded-xl mt-2 outline-none">
+            </div>
+            <button onclick="updateProfile()" class="btn-primary w-full py-4 rounded-xl font-bold">SIMPAN PERUBAHAN</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG FIREBASE (Zidan, ganti dengan config asli Firebase-mu di sini)
+        const firebaseConfig = { databaseURL: "https://your-database-name.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // OPENROUTER CONFIG
+        const OPENROUTER_API = "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";
+
+        let myID = "";
+        let myName = "";
+        let myLives = 2;
+        let currentRoom = null;
+        let isHost = false;
+
+        // INITIAL LOAD
+        window.onload = () => {
+            const savedName = localStorage.getItem('spy_name');
+            const savedID = localStorage.getItem('spy_id');
+
+            if (!savedName || !savedID) {
+                document.getElementById('name-modal').classList.remove('hidden');
+            } else {
+                myName = savedName;
+                myID = savedID;
+                startApp();
+            }
+        };
+
+        function saveProfile() {
+            const inp = document.getElementById('user-name-input').value;
+            if (inp.length < 2) return alert("Nama terlalu pendek!");
             
-            set(ref(db, 'rooms/' + this.roomCode), {
-                status: "waiting",
-                questions: this.questions,
-                players: { [this.user.id]: { name: this.user.name, score: 0 } }
+            myID = Math.floor(1000 + Math.random() * 9000).toString(); // ID 4 Digit
+            myName = inp;
+            localStorage.setItem('spy_name', myName);
+            localStorage.setItem('spy_id', myID);
+            
+            document.getElementById('name-modal').classList.add('hidden');
+            startApp();
+        }
+
+        function startApp() {
+            document.getElementById('display-name').innerText = `${myName} | ID: ${myID}`;
+            document.getElementById('setting-name').value = myName;
+            listenNotifications();
+            renderLives();
+            showPage('home');
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page').forEach(el => el.classList.add('hidden-page'));
+            document.getElementById('page-' + p).classList.remove('hidden-page');
+        }
+
+        // ROOM LOGIC
+        function createRoom() {
+            const roomID = Math.floor(10000 + Math.random() * 90000).toString(); // ID 5 Digit
+            currentRoom = roomID;
+            isHost = true;
+            
+            db.ref('rooms/' + roomID).set({
+                host: myID,
+                status: 'waiting',
+                players: { [myID]: { name: myName, role: 'citizen', lives: 2 } }
             });
+            enterLobby(roomID);
+        }
 
-            this.listenToLobby();
-            document.getElementById('host-tools').style.display = 'block';
-            document.getElementById('wait-msg').style.display = 'none';
-            this.go('stage-lobby');
-        } catch(e) { alert("JSON Rusak!"); }
-    },
+        function joinRoom() {
+            const id = document.getElementById('join-id').value;
+            db.ref('rooms/' + id).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    currentRoom = id;
+                    isHost = false;
+                    db.ref(`rooms/${id}/players/${myID}`).set({ name: myName, role: 'citizen', lives: 2 });
+                    enterLobby(id);
+                } else {
+                    alert("Room tidak ditemukan!");
+                }
+            });
+        }
 
-    joinRoom() {
-        const code = document.getElementById('join-code').value;
-        onValue(ref(db, 'rooms/' + code), (snap) => {
-            const data = snap.val();
-            if(data) {
-                this.roomCode = code;
-                this.questions = data.questions;
-                update(ref(db, `rooms/${code}/players/${this.user.id}`), { name: this.user.name, score: 0 });
-                this.listenToLobby();
-                this.go('stage-lobby');
-            }
-        }, { onlyOnce: true });
-    },
-
-    listenToLobby() {
-        document.getElementById('v-room-id').innerText = "ROOM: " + this.roomCode;
-        // Listen Pemain Join
-        onValue(ref(db, `rooms/${this.roomCode}/players`), (snap) => {
-            const players = snap.val();
-            const list = document.getElementById('player-list');
-            list.innerHTML = "";
-            if(players) {
-                Object.values(players).forEach(p => {
-                    list.innerHTML += `<span class="player-tag">👤 ${p.name}</span>`;
-                });
-            }
-        });
-        // Listen Status Mulai
-        onValue(ref(db, `rooms/${this.roomCode}/status`), (snap) => {
-            if(snap.val() === "playing") this.startQuiz();
-            if(snap.val() === "finished") this.showRanking();
-        });
-    },
-
-    startGame() { update(ref(db, 'rooms/' + this.roomCode), { status: "playing" }); },
-
-    startQuiz() { this.index = 0; this.go('stage-quiz'); this.renderQ(); },
-
-    renderQ() {
-        if(this.index >= this.questions.length) return this.finishQuiz();
-        const q = this.questions[this.index];
-        document.getElementById('v-question').innerText = q.q;
-        const optBox = document.getElementById('v-options'); optBox.innerHTML = "";
-        q.o.forEach(o => {
-            const btn = document.createElement('button');
-            btn.className = "btn-main"; btn.style.background = "white"; btn.innerText = o;
-            btn.onclick = () => {
-                if(o === q.a) this.user.score += 10;
-                update(ref(db, `rooms/${this.roomCode}/players/${this.user.id}`), { score: this.user.score });
-                this.index++; this.renderQ();
-            };
-            optBox.appendChild(btn);
-        });
-    },
-
-    finishQuiz() {
-        this.go('stage-lobby');
-        document.getElementById('wait-msg').innerText = "Menunggu pemain lain selesai...";
-        // Hanya host yang bisa ganti status ke finished (Opsional: otomatis jika semua selesai)
-        setTimeout(() => {
-            update(ref(db, 'rooms/' + this.roomCode), { status: "finished" });
-        }, 3000);
-    },
-
-    showRanking() {
-        this.go('stage-rank');
-        const container = document.getElementById('rank-container');
-        onValue(ref(db, `rooms/${this.roomCode}/players`), (snap) => {
-            const players = Object.values(snap.val() || {});
-            // Urutkan skor tertinggi
-            players.sort((a, b) => b.score - a.score);
+        function enterLobby(id) {
+            showPage('lobby');
+            document.getElementById('room-id-display').innerText = id;
             
-            container.innerHTML = "";
-            players.forEach((p, i) => {
-                const item = document.createElement('div');
-                item.className = `rank-item ${i === 0 ? 'rank-1' : ''}`;
-                item.innerHTML = `<span>#${i+1} ${p.name}</span> <span>${p.score} PT</span>`;
-                container.appendChild(item);
+            db.ref('rooms/' + id + '/players').on('value', snapshot => {
+                const players = snapshot.val() || {};
+                const list = document.getElementById('player-list');
+                list.innerHTML = "";
                 
-                // Animasi muncul satu-per-satu
-                setTimeout(() => item.classList.add('show'), i * 400);
+                const count = Object.keys(players).length;
+                Object.values(players).forEach(p => {
+                    list.innerHTML += `<div class="glass p-4 text-center font-bold text-xs">${p.name}</div>`;
+                });
+
+                document.getElementById('lobby-status').innerText = `${count}/6 Pemain`;
+                
+                if (isHost) {
+                    document.getElementById('start-btn').classList.toggle('hidden', count < 3);
+                }
             });
-        }, { onlyOnce: true });
-    }
-};
-</script>
+
+            db.ref('rooms/' + id + '/status').on('value', snap => {
+                if (snap.val() === 'playing') initGameUI();
+            });
+        }
+
+        // GAME LOGIC
+        async function startGame() {
+            // Jika pemain < 6, tambahkan Bot AI
+            const playersRef = db.ref(`rooms/${currentRoom}/players`);
+            const snapshot = await playersRef.get();
+            let players = snapshot.val();
+            let count = Object.keys(players).length;
+
+            while (count < 6) {
+                const botID = "BOT_" + count;
+                players[botID] = { name: "Bot Stenly " + count, isBot: true, role: 'citizen', lives: 2 };
+                count++;
+            }
+
+            // Tentukan Spy secara acak
+            const keys = Object.keys(players);
+            const spyID = keys[Math.floor(Math.random() * keys.length)];
+            
+            // Dapatkan Kata dari OpenRouter
+            const wordData = await fetchSecretWords();
+            
+            Object.keys(players).forEach(pid => {
+                players[pid].role = (pid === spyID) ? 'spy' : 'citizen';
+                players[pid].word = (pid === spyID) ? wordData.spyWord : wordData.citizenWord;
+            });
+
+            db.ref(`rooms/${currentRoom}`).update({
+                players: players,
+                status: 'playing',
+                turn: 1,
+                session: 'clue_1'
+            });
+        }
+
+        async function fetchSecretWords() {
+            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${OPENROUTER_API}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "google/gemini-2.0-flash-001",
+                    messages: [{ role: "user", content: "Berikan dua benda yang mirip untuk game Who The Spy. JSON format: {\"citizenWord\":\"...\", \"spyWord\":\"...\"}" }]
+                })
+            });
+            const data = await res.json();
+            return JSON.parse(data.choices[0].message.content);
+        }
+
+        function initGameUI() {
+            showPage('game');
+            db.ref(`rooms/${currentRoom}/players/${myID}`).once('value', snap => {
+                document.getElementById('secret-word').innerText = snap.val().word;
+            });
+        }
+
+        async function sendClue() {
+            const inp = document.getElementById('clue-input');
+            const clue = inp.value;
+            if (!clue) return;
+
+            // Moderasi Konten Jorok via AI
+            const check = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${OPENROUTER_API}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "google/gemini-2.0-flash-001",
+                    messages: [{ role: "system", content: "Cek apakah kalimat ini mengandung unsur jorok/porno. Jawab 'AMAN' atau 'BLOKIR' saja." }, { role: "user", content: clue }]
+                })
+            });
+            const result = await check.json();
+            
+            if (result.choices[0].message.content.includes("BLOKIR")) {
+                alert("Ciri-ciri terlalu jorok! Gabisa ditampilkan.");
+                return;
+            }
+
+            db.ref(`rooms/${currentRoom}/chat`).push({ sender: myName, msg: clue });
+            inp.value = "";
+        }
+
+        // SOCIAL SYSTEM (ID 4 DIGIT)
+        function followUser() {
+            const targetID = document.getElementById('find-id').value;
+            if (targetID === myID) return alert("Gak bisa follow diri sendiri!");
+
+            db.ref(`notifications/${targetID}`).push({
+                type: 'follow_request',
+                fromID: myID,
+                fromName: myName,
+                time: Date.now()
+            });
+            alert("Permintaan follow dikirim!");
+        }
+
+        function listenNotifications() {
+            db.ref(`notifications/${myID}`).on('child_added', snap => {
+                const n = snap.val();
+                const area = document.getElementById('notif-area');
+                
+                const div = document.createElement('div');
+                div.className = "glass p-4 mb-2 shadow-xl border-indigo-500 animate-bounce";
+                
+                if (n.type === 'follow_request') {
+                    div.innerHTML = `
+                        <p class="text-xs font-bold">${n.fromName} ingin mem-follow kamu.</p>
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="acceptFollow('${snap.key}', '${n.fromID}', '${n.fromName}')" class="bg-indigo-500 px-4 py-1 rounded text-[10px]">TERIMA</button>
+                            <button onclick="this.parentElement.parentElement.remove()" class="bg-slate-700 px-4 py-1 rounded text-[10px]">TOLAK</button>
+                        </div>`;
+                }
+                area.appendChild(div);
+            });
+        }
+
+        function acceptFollow(notifKey, targetID, targetName) {
+            db.ref(`friends/${myID}/${targetID}`).set({ name: targetName });
+            db.ref(`friends/${targetID}/${myID}`).set({ name: myName });
+            db.ref(`notifications/${myID}/${notifKey}`).remove();
+            renderFriends();
+        }
+
+        function renderFriends() {
+            db.ref(`friends/${myID}`).once('value', snap => {
+                const list = document.getElementById('friends-list');
+                list.innerHTML = "";
+                snap.forEach(f => {
+                    list.innerHTML += `
+                        <div class="glass p-4 flex justify-between items-center">
+                            <span class="text-xs font-bold">${f.val().name}</span>
+                            <button onclick="inviteFriend('${f.key}')" class="text-[9px] bg-indigo-500 px-3 py-1 rounded-full font-black">UNDANG</button>
+                        </div>`;
+                });
+            });
+        }
+
+        function renderLives() {
+            const area = document.getElementById('game-lives');
+            area.innerHTML = "";
+            for (let i = 0; i < myLives; i++) {
+                area.innerHTML += '<i class="fa-solid fa-heart heart"></i>';
+            }
+        }
+
+        function leaveRoom() {
+            if (currentRoom) {
+                db.ref(`rooms/${currentRoom}/players/${myID}`).remove();
+                currentRoom = null;
+                showPage('home');
+            }
+        }
+    </script>
 </body>
 </html>
