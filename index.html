@@ -10,85 +10,98 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0F172A; color: white; overflow: hidden; }
-        .page { position: fixed; inset: 0; display: none; flex-direction: column; padding: 20px; background: #0F172A; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0A0F1E; color: white; overflow: hidden; }
+        .page { position: fixed; inset: 0; display: none; flex-direction: column; padding: 20px; background: radial-gradient(circle at top, #1E293B 0%, #0A0F1E 100%); }
         .active-page { display: flex; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border-radius: 28px; border: 1px solid rgba(255,255,255,0.08); }
         
-        /* FIX: Bubble Clue Auto Height */
-        .player-card { background: white; color: #1E293B; border-radius: 16px; padding: 10px; text-align: center; position: relative; width: 100%; max-width: 105px; margin: auto; }
+        /* FIX: Bubble Clue Anti-Potong */
         .clue-bubble { 
-            position: absolute; bottom: 115%; left: 50%; transform: translateX(-50%); 
-            background: #6366F1; color: white; padding: 8px 12px; border-radius: 14px; 
-            font-size: 9px; font-weight: 700; min-width: 90px; width: 120px; 
+            position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); 
+            background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%); 
+            color: white; padding: 10px 14px; border-radius: 18px; 
+            font-size: 10px; font-weight: 700; width: 140px; 
             white-space: normal; word-wrap: break-word; text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 100; display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 100;
+            border: 1.5px solid rgba(255,255,255,0.2); animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .clue-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #6366F1; }
-        
-        .btn-vote-red { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #EF4444; color: white; font-size: 8px; font-weight: 900; padding: 4px 10px; border-radius: 20px; border: 2px solid white; z-index: 110; }
-        .timer-line { height: 4px; background: #6366F1; border-radius: 2px; transition: width 0.5s linear; }
-        #overlay-result { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .clue-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 8px solid transparent; border-top-color: #4338CA; }
+        @keyframes pop { from { opacity: 0; transform: translateX(-50%) scale(0.5); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+        .player-card { background: white; border-radius: 24px; padding: 15px; text-align: center; position: relative; width: 100%; max-width: 110px; margin: auto; transition: 0.3s; }
+        .btn-vote-red { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #F43F5E; color: white; font-size: 9px; font-weight: 900; padding: 5px 12px; border-radius: 20px; border: 2.5px solid white; z-index: 110; box-shadow: 0 5px 15px rgba(244,63,94,0.4); }
+        .timer-line { height: 6px; background: #6366F1; border-radius: 10px; transition: width 0.5s linear; box-shadow: 0 0 15px rgba(99,102,241,0.5); }
     </style>
 </head>
 <body>
 
-    <div id="overlay-result">
-        <h2 id="res-title" class="text-3xl font-black italic mb-4 text-indigo-500"></h2>
-        <p id="res-desc" class="text-lg font-bold mb-8"></p>
-        <p class="text-[10px] opacity-50 uppercase tracking-widest">Lobby in 3s...</p>
+    <div id="overlay-result" class="fixed inset-0 bg-black/95 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
+        <div class="glass p-10 w-full max-w-sm border-indigo-500/50">
+            <h2 id="res-title" class="text-4xl font-black italic mb-2 tracking-tighter"></h2>
+            <p id="res-desc" class="text-lg font-bold text-slate-400 mb-8"></p>
+            <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
     </div>
 
     <div id="p-login" class="page active-page items-center justify-center">
-        <div class="glass p-8 w-full max-w-sm text-center">
-            <h1 class="text-3xl font-black mb-6 italic">SPY<span class="text-indigo-500">mobile</span></h1>
-            <input type="text" id="user-name" placeholder="Nickname..." class="w-full bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700 outline-none font-bold text-white">
-            <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-black uppercase">Play Game</button>
+        <div class="glass p-10 w-full max-w-sm text-center">
+            <div class="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
+                <i class="fa-solid fa-user-secret text-4xl"></i>
+            </div>
+            <h1 class="text-4xl font-black mb-2 italic tracking-tighter text-white">SPY<span class="text-indigo-500">mobile</span></h1>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-8">Next-Gen Party Game</p>
+            <input type="text" id="user-name" placeholder="Enter Nickname" class="w-full bg-slate-900/50 p-5 rounded-2xl mb-4 border border-slate-800 outline-none font-bold text-white focus:border-indigo-500 transition-all">
+            <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase shadow-xl shadow-indigo-600/20 active:scale-95 transition-all">Start Experience</button>
         </div>
     </div>
 
     <div id="p-home" class="page">
-        <h2 id="disp-name" class="text-xl font-black mb-10 text-indigo-400"></h2>
-        <button onclick="createRoom()" class="w-full bg-indigo-600 p-8 rounded-[32px] mb-4 flex justify-between items-center">
-            <div class="text-left"><h3 class="font-black uppercase">Host Room</h3><p class="text-[10px] opacity-60">Manage Players & AI</p></div>
-            <i class="fa-solid fa-crown text-2xl"></i>
+        <div class="flex justify-between items-center mb-10">
+            <div><p class="text-[10px] font-black opacity-40 uppercase">Welcome back</p><h2 id="disp-name" class="text-2xl font-black text-white"></h2></div>
+            <button class="w-12 h-12 glass flex items-center justify-center"><i class="fa-solid fa-gear text-slate-400"></i></button>
+        </div>
+        <button onclick="createRoom()" class="w-full bg-indigo-600 p-10 rounded-[40px] mb-6 flex justify-between items-center shadow-2xl shadow-indigo-600/20 group">
+            <div class="text-left"><h3 class="text-xl font-black uppercase tracking-tight">Create Room</h3><p class="text-[10px] opacity-70 font-bold">Host with AI Bots</p></div>
+            <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><i class="fa-solid fa-plus text-2xl"></i></div>
         </button>
-        <div class="glass p-3 flex gap-2">
-            <input type="number" id="room-input" placeholder="Enter ID Room" class="bg-transparent flex-1 px-2 outline-none font-bold">
-            <button onclick="joinRoom()" class="bg-indigo-500 px-6 py-3 rounded-xl text-xs font-black uppercase">Join</button>
+        <div class="glass p-4 flex gap-3">
+            <input type="number" id="room-input" placeholder="ID 5 Digits" class="bg-transparent flex-1 px-4 outline-none font-black text-lg">
+            <button onclick="joinRoom()" class="bg-white text-black px-8 py-4 rounded-2xl text-xs font-black uppercase">Join</button>
         </div>
     </div>
 
     <div id="p-lobby" class="page">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg font-black text-indigo-400 uppercase">Room: <span id="lobby-rid"></span></h2>
-            <div id="host-opt" class="hidden flex items-center gap-2">
-                <input type="number" id="p-limit" value="3" min="2" max="10" class="w-10 bg-slate-800 p-1 rounded text-center font-bold text-xs border border-indigo-500">
-                <span class="text-[8px] font-black uppercase">Players</span>
+        <div class="flex justify-between items-center mb-8">
+            <button onclick="exitGame()" class="w-10 h-10 glass flex items-center justify-center text-rose-500"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="text-center"><p class="text-[8px] font-black opacity-40 uppercase">Room ID</p><h2 id="lobby-rid" class="text-xl font-black text-indigo-500 tracking-widest"></h2></div>
+            <div id="host-opt" class="hidden flex items-center gap-2 bg-slate-900/50 p-2 rounded-xl border border-white/5">
+                <input type="number" id="p-limit" value="3" min="2" max="10" class="w-8 bg-transparent text-center font-black text-indigo-400 outline-none">
+                <i class="fa-solid fa-users text-[10px] opacity-40"></i>
             </div>
         </div>
-        <div id="lobby-list" class="grid grid-cols-2 gap-3 flex-1 overflow-y-auto mb-6"></div>
-        <button id="btn-start" onclick="triggerStart()" class="w-full bg-indigo-600 py-5 rounded-2xl font-black hidden uppercase tracking-widest">Launch Match</button>
+        <div id="lobby-list" class="grid grid-cols-2 gap-4 flex-1 overflow-y-auto mb-8"></div>
+        <button id="btn-start" onclick="triggerStart()" class="w-full bg-indigo-600 py-6 rounded-[28px] font-black hidden uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30">Launch Match</button>
     </div>
 
-    <div id="p-count" class="page items-center justify-center text-9xl font-black text-indigo-500">3</div>
-
     <div id="p-game" class="page">
-        <div class="mb-4">
-            <div class="flex justify-between items-center mb-1">
-                <div id="g-lives" class="flex gap-1 text-rose-500"></div>
-                <div id="g-phase" class="bg-indigo-500 text-[8px] font-black px-3 py-1 rounded-full uppercase">Wait</div>
-            </div>
-            <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div id="timer-bar" class="timer-line w-full"></div></div>
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="exitGame()" class="w-10 h-10 glass flex items-center justify-center text-rose-500"><i class="fa-solid fa-door-open"></i></button>
+            <div id="g-lives" class="flex gap-2 text-rose-500 text-lg"></div>
+            <div id="g-phase" class="bg-white text-black text-[9px] font-black px-4 py-1.5 rounded-full uppercase shadow-lg shadow-white/10">Syncing...</div>
         </div>
-        <div class="glass p-5 text-center mb-12 border-indigo-500/30 border-2">
-            <p id="g-round-info" class="text-[9px] font-black opacity-40 uppercase mb-1">Session 1</p>
-            <h2 id="g-word" class="text-2xl font-black text-white tracking-widest uppercase">????</h2>
+        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mb-8"><div id="timer-bar" class="timer-line w-full"></div></div>
+        
+        <div class="glass p-8 text-center mb-16 border-indigo-500/20 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
+            <p id="g-round-info" class="text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">Session 1</p>
+            <h2 id="g-word" class="text-3xl font-black text-white tracking-tighter uppercase italic">Loading...</h2>
         </div>
-        <div id="g-grid" class="grid grid-cols-2 gap-x-3 gap-y-16 flex-1 overflow-y-auto content-start pt-10 pb-10"></div>
-        <div id="g-input" class="mt-4 p-2 glass flex gap-2 rounded-2xl border-t border-white/10">
-            <input type="text" id="clue-in" placeholder="Type your clue..." class="bg-transparent flex-1 px-3 outline-none text-xs font-bold text-white">
-            <button onclick="sendClue()" class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
+
+        <div id="g-grid" class="grid grid-cols-2 gap-x-4 gap-y-20 flex-1 overflow-y-auto content-start pt-10 pb-20"></div>
+
+        <div id="g-input" class="mt-auto p-3 glass flex gap-3 rounded-[30px] border border-white/10 mb-2">
+            <input type="text" id="clue-in" placeholder="Describe the word..." class="bg-transparent flex-1 px-4 outline-none text-sm font-bold text-white">
+            <button onclick="sendClue()" class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all"><i class="fa-solid fa-paper-plane text-xl"></i></button>
         </div>
     </div>
 
@@ -116,7 +129,7 @@
             loadHome();
         }
 
-        function loadHome() { showPage('home'); document.getElementById('disp-name').innerText = user.name.toUpperCase(); }
+        function loadHome() { showPage('home'); document.getElementById('disp-name').innerText = user.name; }
 
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
@@ -154,7 +167,9 @@
                 const list = document.getElementById('lobby-list');
                 list.innerHTML = "";
                 const ps = s.val() || {};
-                Object.values(ps).forEach(p => { list.innerHTML += `<div class="glass p-4 text-center text-[10px] font-black uppercase">${p.name}</div>`; });
+                Object.values(ps).forEach(p => { 
+                    list.innerHTML += `<div class="glass p-6 text-center text-xs font-black uppercase tracking-widest border-white/5">${p.name}</div>`; 
+                });
                 if(isHost) document.getElementById('btn-start').classList.remove('hidden');
             });
 
@@ -164,13 +179,21 @@
             });
         }
 
+        function exitGame() {
+            if(curRoom) {
+                db.ref(`rooms/${curRoom}/players/${user.id}`).remove();
+                if(isHost) db.ref(`rooms/${curRoom}`).remove();
+            }
+            location.reload();
+        }
+
         function triggerStart() {
             const limit = parseInt(document.getElementById('p-limit').value) || 3;
             db.ref(`rooms/${curRoom}`).update({ status: 'counting', pLimit: limit });
         }
 
         async function runCountdown() {
-            showPage('count');
+            showPage('p-count'); // Fix ID
             let c = 3;
             const t = setInterval(() => {
                 c--;
@@ -187,10 +210,10 @@
                 let players = snap.val().players;
                 let limit = snap.val().pLimit || 3;
                 
-                const bots = ["VORTEX_AI", "CYPHER_X", "NOVA_BOT", "ZENITH"];
+                const bots = ["X-CYPHER", "NEON_DRIVE", "VORTEX_99", "BLADE_RUN", "SILICON"];
                 while(Object.keys(players).length < limit) {
                     const bid = "BOT_" + Math.random().toString(36).substr(2,4);
-                    players[bid] = { name: bots.pop() || "COM", lives: 2, isBot: true, clue: "", votes: 0, votedId: "" };
+                    players[bid] = { name: bots[Math.floor(Math.random()*bots.length)] + "_" + Math.floor(Math.random()*99), lives: 2, isBot: true, clue: "", votes: 0, votedId: "" };
                 }
 
                 const ids = Object.keys(players);
@@ -207,11 +230,11 @@
             try {
                 const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "Reply ONLY JSON: {\"citizen\":\"...\", \"spy\":\"...\"}" }] })
+                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "JSON ONLY: {\"citizen\":\"...\", \"spy\":\"...\"}" }] })
                 });
                 const d = await r.json();
                 return JSON.parse(d.choices[0].message.content.match(/\{.*\}/s)[0]);
-            } catch(e) { return { citizen: "Gelas", spy: "Piring" }; }
+            } catch(e) { return { citizen: "Kamera", spy: "HP" }; }
         }
 
         function startGameUI() {
@@ -221,7 +244,7 @@
                 const ps = rd.players;
                 document.getElementById('g-word').innerText = ps[user.id].word;
                 document.getElementById('g-phase').innerText = rd.phase.toUpperCase();
-                document.getElementById('g-round-info').innerText = `SESSION ${rd.round}`;
+                document.getElementById('g-round-info').innerText = `SESSION ${rd.round} / 2`;
                 document.getElementById('timer-bar').style.width = (rd.timer / (rd.phase==='diskusi'?30:20) * 100) + "%";
 
                 const grid = document.getElementById('g-grid');
@@ -229,32 +252,32 @@
                 Object.keys(ps).forEach(pid => {
                     const p = ps[pid];
                     grid.innerHTML += `
-                        <div class="player-card shadow-lg ${p.votedId === user.id ? 'ring-2 ring-rose-500' : ''}">
-                            <button class="btn-vote-red" style="display:${rd.phase==='vote' && pid !== user.id && !hasVoted ? 'block':'none'}" onclick="castVote('${pid}')">VOTE</button>
-                            <div id="bubble-${pid}" class="clue-bubble" style="display:${p.clue?'block':'none'}">${p.clue}</div>
-                            <div class="w-10 h-10 bg-indigo-600 text-white rounded-full mx-auto mb-1 flex items-center justify-center font-black">${p.name[0]}</div>
-                            <h4 class="text-[8px] font-black uppercase truncate">${p.name}</h4>
-                            <div class="text-[7px] mt-1">${'❤️'.repeat(p.lives)}</div>
+                        <div class="player-card shadow-2xl transition-all ${p.votedId === user.id ? 'ring-4 ring-rose-500 scale-95' : ''}">
+                            <button class="btn-vote-red" style="display:${rd.phase==='vote' && pid !== user.id && !hasVoted ? 'block':'none'}" onclick="castVote('${pid}')">VOTE RED</button>
+                            <div class="clue-bubble" style="display:${p.clue?'block':'none'}">${p.clue}</div>
+                            <div class="w-12 h-12 bg-slate-900 text-indigo-400 rounded-2xl mx-auto mb-2 flex items-center justify-center font-black border border-white/5">${p.name[0]}</div>
+                            <h4 class="text-[9px] font-black text-slate-800 uppercase truncate">${p.name}</h4>
+                            <div class="flex justify-center gap-0.5 mt-1">${'<div class="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>'.repeat(p.lives)}</div>
                         </div>`;
                     
-                    if(isHost && p.isBot && rd.phase === 'diskusi' && !p.clue) handleBotClue(pid, p.word);
+                    if(isHost && p.isBot && rd.phase === 'diskusi' && !p.clue) handleBotLogic(pid, p.word);
                     if(isHost && p.isBot && rd.phase === 'vote' && !p.votedId) handleBotVote(pid, ps);
                 });
-
                 if(isHost) manageHostTimer(rd);
             });
             renderLives();
         }
 
-        async function handleBotClue(bid, word) {
+        async function handleBotLogic(bid, word) {
+            // AI JAWAB RANDOM AGAR PUNYA PIKIRAN BEDA-BEDA
             try {
                 const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `Clue 3 words for ${word}` }] })
+                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `Give a 3-word unique clue for: ${word}. Make it sound different from others.` }] })
                 });
                 const d = await r.json();
-                db.ref(`rooms/${curRoom}/players/${bid}`).update({ clue: d.choices[0].message.content.trim() });
-            } catch(e) { db.ref(`rooms/${curRoom}/players/${bid}`).update({ clue: "Biasa dipakai..." }); }
+                db.ref(`rooms/${curRoom}/players/${bid}`).update({ clue: d.choices[0].message.content.replace(/"/g, "").trim() });
+            } catch(e) { db.ref(`rooms/${curRoom}/players/${bid}`).update({ clue: "Sangat berguna..." }); }
         }
 
         function handleBotVote(bid, players) {
@@ -271,7 +294,6 @@
 
             const interval = setInterval(async () => {
                 currentTimer--;
-                
                 const snap = await db.ref(`rooms/${curRoom}/players`).get();
                 const ps = snap.val();
                 const allClued = Object.values(ps).every(p => p.clue !== "");
@@ -288,7 +310,7 @@
                             db.ref(`rooms/${curRoom}`).update({ phase: 'vote', timer: 20 });
                         }
                     } else {
-                        processFinalVote(ps);
+                        processEnd(ps);
                     }
                 } else {
                     db.ref(`rooms/${curRoom}`).update({ timer: currentTimer });
@@ -296,28 +318,36 @@
             }, 1000);
         }
 
-        async function processFinalVote(ps) {
-            let max = -1; let targetId = null;
-            Object.keys(ps).forEach(id => { if(ps[id].votes > max) { max = ps[id].votes; targetId = id; } });
-
+        function processEnd(ps) {
+            let max = -1; let tid = null;
+            Object.keys(ps).forEach(id => { if(ps[id].votes > max) { max = ps[id].votes; tid = id; } });
             const overlay = document.getElementById('overlay-result');
-            overlay.style.display = 'flex';
-            const target = ps[targetId];
-
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
+            
+            const target = ps[tid];
             if(target.role === 'spy') {
-                document.getElementById('res-title').innerText = "SPY ELIMINATED!";
-                document.getElementById('res-desc').innerText = `${target.name} Was The Spy!`;
-                setTimeout(() => { location.reload(); }, 3000);
+                document.getElementById('res-title').innerText = "SPY CAUGHT!";
+                document.getElementById('res-desc').innerText = `${target.name} was the traitor. Citizens Win!`;
+                setTimeout(() => exitGame(), 4000); // Otomatis balik lobby biar bersih
             } else {
                 document.getElementById('res-title').innerText = "WRONG KICK!";
-                document.getElementById('res-desc').innerText = `${target.name} Is Citizen!`;
-                Object.keys(ps).forEach(id => { if(ps[id].role === 'citizen') db.ref(`rooms/${curRoom}/players/${id}`).update({ lives: 1 }); });
+                document.getElementById('res-desc').innerText = `${target.name} was a Citizen. All citizens lose 1 HP.`;
+                
+                // Kurangi nyawa semua citizen di Firebase
+                Object.keys(ps).forEach(id => { 
+                    if(ps[id].role === 'citizen') db.ref(`rooms/${curRoom}/players/${id}/lives`).transaction(l => (l || 1) - 1); 
+                });
+
                 setTimeout(() => {
-                    overlay.style.display = 'none';
+                    overlay.classList.add('hidden'); 
+                    overlay.classList.remove('flex');
                     hasVoted = false;
-                    db.ref(`rooms/${curRoom}`).update({ phase: 'diskusi', round: 1, timer: 30 });
-                    Object.keys(ps).forEach(id => db.ref(`rooms/${curRoom}/players/${id}`).update({ clue: "", votes: 0, votedId: "" }));
-                }, 3000);
+                    // Reset ronde buat diskusi lagi
+                    if(isHost) {
+                        db.ref(`rooms/${curRoom}`).update({ phase: 'diskusi', round: 1, timer: 30 });
+                        Object.keys(ps).forEach(id => db.ref(`rooms/${curRoom}/players/${id}`).update({ clue: "", votes: 0, votedId: "" }));
+                    }
+                }, 4000);
             }
         }
 
@@ -326,16 +356,21 @@
             hasVoted = true;
             db.ref(`rooms/${curRoom}/players/${id}/votes`).transaction(c => (c || 0) + 1);
             db.ref(`rooms/${curRoom}/players/${user.id}`).update({ votedId: id });
+            // Efek feedback visual biar kerasa udah nge-vote
+            console.log("Voted for: " + id);
         }
 
         function sendClue() {
-            const v = document.getElementById('clue-in').value; if(!v) return;
+            const v = document.getElementById('clue-in').value; 
+            if(!v || v.trim() === "") return;
             db.ref(`rooms/${curRoom}/players/${user.id}`).update({ clue: v });
             document.getElementById('clue-in').value = "";
         }
 
         function renderLives() {
-            const l = document.getElementById('g-lives'); l.innerHTML = "";
+            const l = document.getElementById('g-lives'); 
+            l.innerHTML = "";
+            // Ambil data nyawa terbaru dari user object
             for(let i=0; i<user.lives; i++) l.innerHTML += '<i class="fa-solid fa-heart"></i>';
         }
     </script>
