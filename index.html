@@ -2,377 +2,761 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPYmobile Official</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>ZOoLY - Video Call</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0A0F1E; color: white; overflow: hidden; }
-        .page { position: fixed; inset: 0; display: none; flex-direction: column; padding: 20px; background: radial-gradient(circle at top, #1E293B 0%, #0A0F1E 100%); }
-        .active-page { display: flex; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border-radius: 28px; border: 1px solid rgba(255,255,255,0.08); }
-        
-        /* FIX: Bubble Clue Anti-Potong */
-        .clue-bubble { 
-            position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); 
-            background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%); 
-            color: white; padding: 10px 14px; border-radius: 18px; 
-            font-size: 10px; font-weight: 700; width: 140px; 
-            white-space: normal; word-wrap: break-word; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 100;
-            border: 1.5px solid rgba(255,255,255,0.2); animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-        .clue-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 8px solid transparent; border-top-color: #4338CA; }
-        @keyframes pop { from { opacity: 0; transform: translateX(-50%) scale(0.5); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
 
-        .player-card { background: white; border-radius: 24px; padding: 15px; text-align: center; position: relative; width: 100%; max-width: 110px; margin: auto; transition: 0.3s; }
-        .btn-vote-red { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #F43F5E; color: white; font-size: 9px; font-weight: 900; padding: 5px 12px; border-radius: 20px; border: 2.5px solid white; z-index: 110; box-shadow: 0 5px 15px rgba(244,63,94,0.4); }
-        .timer-line { height: 6px; background: #6366F1; border-radius: 10px; transition: width 0.5s linear; box-shadow: 0 0 15px rgba(99,102,241,0.5); }
+        body {
+            font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', system-ui;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* BOOTING SCREEN */
+        .booting-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transform: translateY(0);
+        }
+
+        .booting-screen.hide {
+            transform: translateY(-100%);
+            pointer-events: none;
+        }
+
+        .booting-content {
+            text-align: center;
+            animation: fadeUp 0.6s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .booting-logo {
+            font-size: 80px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0a84ff, #5e5ce0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .booting-title {
+            font-size: 44px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+
+        .booting-dots {
+            font-size: 20px;
+            color: #0a84ff;
+        }
+
+        /* JOIN SHEET */
+        .join-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(40px);
+            border-radius: 32px 32px 0 0;
+            padding: 28px 24px 44px;
+            z-index: 90;
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transform: translateY(0);
+            border-top: 0.5px solid rgba(255,255,255,0.1);
+        }
+
+        .join-sheet.hide {
+            transform: translateY(100%);
+        }
+
+        .sheet-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .ios-input {
+            background: rgba(120,120,128,0.2);
+            border: 0.5px solid rgba(255,255,255,0.3);
+            border-radius: 14px;
+            padding: 16px 18px;
+            width: 100%;
+            font-size: 17px;
+            color: white;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .ios-input:focus {
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 3px rgba(10,132,255,0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            border-radius: 44px;
+            padding: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: #0a84ff;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(120,120,128,0.3);
+            color: white;
+        }
+
+        /* VIDEO GRID */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            height: 100vh;
+            overflow-y: auto;
+            padding-top: 16px;
+            padding-bottom: 100px;
+        }
+
+        .video-card {
+            position: relative;
+            background: #1c1c1e;
+            border-radius: 24px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .video-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-card.local video {
+            transform: scaleX(-1);
+        }
+
+        .video-name {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(20px);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 10;
+        }
+
+        .mic-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 30px;
+            padding: 6px 10px;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(28,28,30,0.95);
+            backdrop-filter: blur(40px);
+            border-radius: 60px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 80;
+            border: 0.5px solid rgba(255,255,255,0.15);
+        }
+
+        .tool-btn {
+            background: rgba(120,120,128,0.4);
+            border: none;
+            width: 56px;
+            height: 56px;
+            border-radius: 40px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .tool-btn:active {
+            transform: scale(0.92);
+            background: #0a84ff;
+        }
+
+        .tool-hangup {
+            background: #ff3b30;
+        }
+
+        .tool-hangup:active {
+            background: #ff3b30;
+        }
+
+        /* CHAT PANEL */
+        .chat-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 16px;
+            width: 320px;
+            background: rgba(30,30,35,0.97);
+            backdrop-filter: blur(40px);
+            border-radius: 28px;
+            z-index: 85;
+            transform: translateX(360px);
+            transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 0.5px solid rgba(255,255,255,0.15);
+            overflow: hidden;
+        }
+
+        .chat-panel.open {
+            transform: translateX(0);
+        }
+
+        .chat-header {
+            padding: 16px;
+            font-weight: 600;
+            border-bottom: 0.5px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+        }
+
+        .chat-messages {
+            height: 340px;
+            overflow-y: auto;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 12px;
+            gap: 8px;
+            border-top: 0.5px solid rgba(255,255,255,0.1);
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: #2c2c2e;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 15px;
+        }
+
+        .chat-input-area button {
+            background: #0a84ff;
+            border: none;
+            border-radius: 30px;
+            padding: 0 18px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 14px;
+            z-index: 150;
+            transition: 0.2s;
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="overlay-result" class="fixed inset-0 bg-black/95 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
-        <div class="glass p-10 w-full max-w-sm border-indigo-500/50">
-            <h2 id="res-title" class="text-4xl font-black italic mb-2 tracking-tighter"></h2>
-            <p id="res-desc" class="text-lg font-bold text-slate-400 mb-8"></p>
-            <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+<div id="booting" class="booting-screen">
+    <div class="booting-content">
+        <div class="booting-logo">🎥</div>
+        <div class="booting-title">ZOoLY</div>
+        <div class="booting-dots">•••</div>
     </div>
+</div>
 
-    <div id="p-login" class="page active-page items-center justify-center">
-        <div class="glass p-10 w-full max-w-sm text-center">
-            <div class="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-                <i class="fa-solid fa-user-secret text-4xl"></i>
-            </div>
-            <h1 class="text-4xl font-black mb-2 italic tracking-tighter text-white">SPY<span class="text-indigo-500">mobile</span></h1>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-8">Next-Gen Party Game</p>
-            <input type="text" id="user-name" placeholder="Enter Nickname" class="w-full bg-slate-900/50 p-5 rounded-2xl mb-4 border border-slate-800 outline-none font-bold text-white focus:border-indigo-500 transition-all">
-            <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase shadow-xl shadow-indigo-600/20 active:scale-95 transition-all">Start Experience</button>
-        </div>
+<div id="joinSheet" class="join-sheet">
+    <div class="sheet-title">ZOoLY</div>
+    <input type="text" id="usernameInput" class="ios-input" placeholder="Nama kamu" autocomplete="off">
+    <input type="text" id="roomInput" class="ios-input" placeholder="Kode ruang" autocomplete="off">
+    <div class="btn-group">
+        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Ruang</button>
+        <button id="joinBtn" class="btn btn-secondary"><i class="fas fa-sign-in-alt"></i> Gabung</button>
     </div>
+</div>
 
-    <div id="p-home" class="page">
-        <div class="flex justify-between items-center mb-10">
-            <div><p class="text-[10px] font-black opacity-40 uppercase">Welcome back</p><h2 id="disp-name" class="text-2xl font-black text-white"></h2></div>
-            <button class="w-12 h-12 glass flex items-center justify-center"><i class="fa-solid fa-gear text-slate-400"></i></button>
-        </div>
-        <button onclick="createRoom()" class="w-full bg-indigo-600 p-10 rounded-[40px] mb-6 flex justify-between items-center shadow-2xl shadow-indigo-600/20 group">
-            <div class="text-left"><h3 class="text-xl font-black uppercase tracking-tight">Create Room</h3><p class="text-[10px] opacity-70 font-bold">Host with AI Bots</p></div>
-            <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><i class="fa-solid fa-plus text-2xl"></i></div>
-        </button>
-        <div class="glass p-4 flex gap-3">
-            <input type="number" id="room-input" placeholder="ID 5 Digits" class="bg-transparent flex-1 px-4 outline-none font-black text-lg">
-            <button onclick="joinRoom()" class="bg-white text-black px-8 py-4 rounded-2xl text-xs font-black uppercase">Join</button>
-        </div>
+<div id="videoGrid" class="video-grid"></div>
+
+<div id="toolbar" class="toolbar" style="display: none;">
+    <button id="micBtn" class="tool-btn"><i class="fas fa-microphone"></i></button>
+    <button id="videoBtn" class="tool-btn"><i class="fas fa-video"></i></button>
+    <button id="cameraBtn" class="tool-btn"><i class="fas fa-sync-alt"></i></button>
+    <button id="chatBtn" class="tool-btn"><i class="fas fa-comment"></i></button>
+    <button id="hangupBtn" class="tool-btn tool-hangup"><i class="fas fa-phone-slash"></i></button>
+</div>
+
+<div id="chatPanel" class="chat-panel">
+    <div class="chat-header"><i class="fas fa-comment"></i> Chat</div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Pesan...">
+        <button id="sendChatBtn">Kirim</button>
     </div>
+</div>
 
-    <div id="p-lobby" class="page">
-        <div class="flex justify-between items-center mb-8">
-            <button onclick="exitGame()" class="w-10 h-10 glass flex items-center justify-center text-rose-500"><i class="fa-solid fa-arrow-left"></i></button>
-            <div class="text-center"><p class="text-[8px] font-black opacity-40 uppercase">Room ID</p><h2 id="lobby-rid" class="text-xl font-black text-indigo-500 tracking-widest"></h2></div>
-            <div id="host-opt" class="hidden flex items-center gap-2 bg-slate-900/50 p-2 rounded-xl border border-white/5">
-                <input type="number" id="p-limit" value="3" min="2" max="10" class="w-8 bg-transparent text-center font-black text-indigo-400 outline-none">
-                <i class="fa-solid fa-users text-[10px] opacity-40"></i>
-            </div>
-        </div>
-        <div id="lobby-list" class="grid grid-cols-2 gap-4 flex-1 overflow-y-auto mb-8"></div>
-        <button id="btn-start" onclick="triggerStart()" class="w-full bg-indigo-600 py-6 rounded-[28px] font-black hidden uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30">Launch Match</button>
-    </div>
+<div id="toastMsg" class="toast"></div>
 
-    <div id="p-game" class="page">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="exitGame()" class="w-10 h-10 glass flex items-center justify-center text-rose-500"><i class="fa-solid fa-door-open"></i></button>
-            <div id="g-lives" class="flex gap-2 text-rose-500 text-lg"></div>
-            <div id="g-phase" class="bg-white text-black text-[9px] font-black px-4 py-1.5 rounded-full uppercase shadow-lg shadow-white/10">Syncing...</div>
-        </div>
-        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mb-8"><div id="timer-bar" class="timer-line w-full"></div></div>
+<script>
+    // DOM Elements
+    const booting = document.getElementById('booting');
+    const joinSheet = document.getElementById('joinSheet');
+    const videoGrid = document.getElementById('videoGrid');
+    const toolbar = document.getElementById('toolbar');
+    const usernameInput = document.getElementById('usernameInput');
+    const roomInput = document.getElementById('roomInput');
+    const createBtn = document.getElementById('createBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const micBtn = document.getElementById('micBtn');
+    const videoBtn = document.getElementById('videoBtn');
+    const cameraBtn = document.getElementById('cameraBtn');
+    const chatBtn = document.getElementById('chatBtn');
+    const hangupBtn = document.getElementById('hangupBtn');
+    const chatPanel = document.getElementById('chatPanel');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const toastMsg = document.getElementById('toastMsg');
+
+    // State
+    let peer = null;
+    let myStream = null;
+    let currentRoom = null;
+    let currentUsername = "";
+    let connections = new Map();
+    let videoElements = new Map();
+    let isMicMuted = false;
+    let isVideoOff = false;
+    let isFrontCamera = true;
+    let localVideoElement = null;
+
+    function showToast(msg, duration = 2000) {
+        toastMsg.textContent = msg;
+        toastMsg.style.opacity = '1';
+        setTimeout(() => {
+            toastMsg.style.opacity = '0';
+        }, duration);
+    }
+
+    // Hilangkan booting
+    setTimeout(() => {
+        booting.classList.add('hide');
+        setTimeout(() => booting.style.display = 'none', 500);
+    }, 1200);
+
+    // Set default
+    usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
+    roomInput.value = "";
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function addLocalVideo(stream, username) {
+        const container = document.createElement('div');
+        container.className = 'video-card local';
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        const nameSpan = document.createElement('div');
+        nameSpan.className = 'video-name';
+        nameSpan.innerText = username;
+        const micSpan = document.createElement('div');
+        micSpan.className = 'mic-badge';
+        micSpan.innerHTML = '<i class="fas fa-microphone"></i>';
+        container.appendChild(video);
+        container.appendChild(nameSpan);
+        container.appendChild(micSpan);
+        videoGrid.appendChild(container);
+        localVideoElement = video;
+    }
+
+    function addRemoteVideo(stream, peerId, userName = null) {
+        if (videoElements.has(peerId)) return;
+        const container = document.createElement('div');
+        container.className = 'video-card';
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.autoplay = true;
+        video.playsInline = true;
+        const nameSpan = document.createElement('div');
+        nameSpan.className = 'video-name';
+        nameSpan.innerText = userName || `Teman`;
+        container.appendChild(video);
+        container.appendChild(nameSpan);
+        videoGrid.appendChild(container);
+        videoElements.set(peerId, { container, video, nameSpan });
+    }
+
+    function appendChatMessage(sender, text, isOwn = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.style.marginBottom = '10px';
+        msgDiv.style.wordBreak = 'break-word';
+        msgDiv.style.textAlign = isOwn ? 'right' : 'left';
+        msgDiv.style.color = isOwn ? '#0a84ff' : '#fff';
+        msgDiv.innerHTML = `<b>${escapeHtml(sender)}</b>: ${escapeHtml(text)}`;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function endMeeting() {
+        showToast("Meninggalkan ruangan");
         
-        <div class="glass p-8 text-center mb-16 border-indigo-500/20 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
-            <p id="g-round-info" class="text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">Session 1</p>
-            <h2 id="g-word" class="text-3xl font-black text-white tracking-tighter uppercase italic">Loading...</h2>
-        </div>
-
-        <div id="g-grid" class="grid grid-cols-2 gap-x-4 gap-y-20 flex-1 overflow-y-auto content-start pt-10 pb-20"></div>
-
-        <div id="g-input" class="mt-auto p-3 glass flex gap-3 rounded-[30px] border border-white/10 mb-2">
-            <input type="text" id="clue-in" placeholder="Describe the word..." class="bg-transparent flex-1 px-4 outline-none text-sm font-bold text-white">
-            <button onclick="sendClue()" class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all"><i class="fa-solid fa-paper-plane text-xl"></i></button>
-        </div>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
-            authDomain: "xbook-global26.firebaseapp.com",
-            databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "xbook-global26"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const OR_KEY = "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";
-
-        let user = { id: localStorage.getItem('sid'), name: localStorage.getItem('sname'), lives: 2 };
-        let curRoom = null; let isHost = false; let hasVoted = false;
-
-        window.onload = () => { if(!user.id) showPage('login'); else loadHome(); };
-
-        function login() {
-            const n = document.getElementById('user-name').value;
-            if(n.length < 2) return;
-            user.id = "U" + Math.floor(Math.random() * 8999 + 1000); user.name = n;
-            localStorage.setItem('sid', user.id); localStorage.setItem('sname', n);
-            loadHome();
-        }
-
-        function loadHome() { showPage('home'); document.getElementById('disp-name').innerText = user.name; }
-
-        function showPage(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-            document.getElementById('p-' + id).classList.add('active-page');
-        }
-
-        function createRoom() {
-            const rid = Math.floor(Math.random() * 89999 + 10000).toString();
-            curRoom = rid; isHost = true;
-            db.ref('rooms/' + rid).set({
-                status: 'lobby', host: user.id, phase: 'diskusi', round: 1, timer: 30,
-                players: { [user.id]: { name: user.name, lives: 2, isBot: false, clue: "", votes: 0, votedId: "" } }
-            });
-            openLobby(rid);
-        }
-
-        function joinRoom() {
-            const rid = document.getElementById('room-input').value;
-            if(!rid) return;
-            db.ref('rooms/' + rid).once('value', s => {
-                if(s.exists()){
-                    curRoom = rid; isHost = false;
-                    db.ref(`rooms/${rid}/players/${user.id}`).set({ name: user.name, lives: 2, isBot: false, clue: "", votes: 0, votedId: "" });
-                    openLobby(rid);
-                }
-            });
-        }
-
-        function openLobby(rid) {
-            showPage('lobby');
-            document.getElementById('lobby-rid').innerText = rid;
-            if(isHost) document.getElementById('host-opt').classList.remove('hidden');
-
-            db.ref(`rooms/${rid}/players`).on('value', s => {
-                const list = document.getElementById('lobby-list');
-                list.innerHTML = "";
-                const ps = s.val() || {};
-                Object.values(ps).forEach(p => { 
-                    list.innerHTML += `<div class="glass p-6 text-center text-xs font-black uppercase tracking-widest border-white/5">${p.name}</div>`; 
-                });
-                if(isHost) document.getElementById('btn-start').classList.remove('hidden');
-            });
-
-            db.ref(`rooms/${rid}/status`).on('value', s => {
-                if(s.val() === 'counting') runCountdown();
-                if(s.val() === 'playing') startGameUI();
-            });
-        }
-
-        function exitGame() {
-            if(curRoom) {
-                db.ref(`rooms/${curRoom}/players/${user.id}`).remove();
-                if(isHost) db.ref(`rooms/${curRoom}`).remove();
+        if (peer) {
+            for (let [id, conn] of connections.entries()) {
+                try { if (conn && conn.close) conn.close(); } catch(e) {}
             }
-            location.reload();
+            connections.clear();
+            peer.destroy();
+            peer = null;
         }
-
-        function triggerStart() {
-            const limit = parseInt(document.getElementById('p-limit').value) || 3;
-            db.ref(`rooms/${curRoom}`).update({ status: 'counting', pLimit: limit });
+        
+        if (myStream) {
+            myStream.getTracks().forEach(track => track.stop());
+            myStream = null;
         }
+        
+        videoElements.clear();
+        if (videoGrid) videoGrid.innerHTML = '';
+        if (toolbar) toolbar.style.display = 'none';
+        if (joinSheet) joinSheet.classList.remove('hide');
+        if (chatMessages) chatMessages.innerHTML = '';
+        if (chatPanel) chatPanel.classList.remove('open');
+        
+        isMicMuted = false;
+        isVideoOff = false;
+        isFrontCamera = true;
+        localVideoElement = null;
+        
+        if (micBtn) micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        if (videoBtn) videoBtn.innerHTML = '<i class="fas fa-video"></i>';
+    }
 
-        async function runCountdown() {
-            showPage('p-count'); // Fix ID
-            let c = 3;
-            const t = setInterval(() => {
-                c--;
-                if(c > 0) document.getElementById('p-count').innerText = c;
-                else {
-                    clearInterval(t);
-                    if(isHost) db.ref(`rooms/${curRoom}`).update({ status: 'playing' });
-                }
-            }, 1000);
-
-            if(isHost) {
-                const words = await fetchAIWords();
-                const snap = await db.ref(`rooms/${curRoom}`).get();
-                let players = snap.val().players;
-                let limit = snap.val().pLimit || 3;
-                
-                const bots = ["X-CYPHER", "NEON_DRIVE", "VORTEX_99", "BLADE_RUN", "SILICON"];
-                while(Object.keys(players).length < limit) {
-                    const bid = "BOT_" + Math.random().toString(36).substr(2,4);
-                    players[bid] = { name: bots[Math.floor(Math.random()*bots.length)] + "_" + Math.floor(Math.random()*99), lives: 2, isBot: true, clue: "", votes: 0, votedId: "" };
-                }
-
-                const ids = Object.keys(players);
-                const spyId = ids[Math.floor(Math.random() * ids.length)];
-                ids.forEach(id => {
-                    players[id].word = (id === spyId) ? words.spy : words.citizen;
-                    players[id].role = (id === spyId) ? 'spy' : 'citizen';
-                });
-                db.ref(`rooms/${curRoom}`).update({ players: players, phase: 'diskusi', timer: 30, round: 1 });
-            }
-        }
-
-        async function fetchAIWords() {
-            try {
-                const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: "JSON ONLY: {\"citizen\":\"...\", \"spy\":\"...\"}" }] })
-                });
-                const d = await r.json();
-                return JSON.parse(d.choices[0].message.content.match(/\{.*\}/s)[0]);
-            } catch(e) { return { citizen: "Kamera", spy: "HP" }; }
-        }
-
-        function startGameUI() {
-            showPage('game');
-            db.ref(`rooms/${curRoom}`).on('value', s => {
-                const rd = s.val(); if(!rd) return;
-                const ps = rd.players;
-                document.getElementById('g-word').innerText = ps[user.id].word;
-                document.getElementById('g-phase').innerText = rd.phase.toUpperCase();
-                document.getElementById('g-round-info').innerText = `SESSION ${rd.round} / 2`;
-                document.getElementById('timer-bar').style.width = (rd.timer / (rd.phase==='diskusi'?30:20) * 100) + "%";
-
-                const grid = document.getElementById('g-grid');
-                grid.innerHTML = "";
-                Object.keys(ps).forEach(pid => {
-                    const p = ps[pid];
-                    grid.innerHTML += `
-                        <div class="player-card shadow-2xl transition-all ${p.votedId === user.id ? 'ring-4 ring-rose-500 scale-95' : ''}">
-                            <button class="btn-vote-red" style="display:${rd.phase==='vote' && pid !== user.id && !hasVoted ? 'block':'none'}" onclick="castVote('${pid}')">VOTE RED</button>
-                            <div class="clue-bubble" style="display:${p.clue?'block':'none'}">${p.clue}</div>
-                            <div class="w-12 h-12 bg-slate-900 text-indigo-400 rounded-2xl mx-auto mb-2 flex items-center justify-center font-black border border-white/5">${p.name[0]}</div>
-                            <h4 class="text-[9px] font-black text-slate-800 uppercase truncate">${p.name}</h4>
-                            <div class="flex justify-center gap-0.5 mt-1">${'<div class="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>'.repeat(p.lives)}</div>
-                        </div>`;
-                    
-                    if(isHost && p.isBot && rd.phase === 'diskusi' && !p.clue) handleBotLogic(pid, p.word);
-                    if(isHost && p.isBot && rd.phase === 'vote' && !p.votedId) handleBotVote(pid, ps);
-                });
-                if(isHost) manageHostTimer(rd);
+    async function startMeeting(roomCode, username) {
+        if (peer) await endMeeting();
+        
+        currentUsername = username;
+        currentRoom = roomCode;
+        
+        showToast(`Menghubung ke ${roomCode}...`);
+        
+        try {
+            const newPeer = new Peer(undefined, {
+                host: 'peerjs-server.herokuapp.com',
+                port: 443,
+                secure: true,
+                path: '/'
             });
-            renderLives();
-        }
-
-        async function handleBotLogic(bid, word) {
-            // AI JAWAB RANDOM AGAR PUNYA PIKIRAN BEDA-BEDA
-            try {
-                const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST", headers: { "Authorization": `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "google/gemini-2.0-flash-001", messages: [{ role: "user", content: `Give a 3-word unique clue for: ${word}. Make it sound different from others.` }] })
-                });
-                const d = await r.json();
-                db.ref(`rooms/${curRoom}/players/${bid}`).update({ clue: d.choices[0].message.content.replace(/"/g, "").trim() });
-            } catch(e) { db.ref(`rooms/${curRoom}/players/${bid}`).update({ clue: "Sangat berguna..." }); }
-        }
-
-        function handleBotVote(bid, players) {
-            const ids = Object.keys(players).filter(id => id !== bid);
-            const target = ids[Math.floor(Math.random() * ids.length)];
-            db.ref(`rooms/${curRoom}/players/${target}/votes`).transaction(c => (c||0)+1);
-            db.ref(`rooms/${curRoom}/players/${bid}`).update({ votedId: target });
-        }
-
-        function manageHostTimer(rd) {
-            if(window.timerActive) return;
-            window.timerActive = true;
-            let currentTimer = rd.timer;
-
-            const interval = setInterval(async () => {
-                currentTimer--;
-                const snap = await db.ref(`rooms/${curRoom}/players`).get();
-                const ps = snap.val();
-                const allClued = Object.values(ps).every(p => p.clue !== "");
-                const allVoted = Object.values(ps).every(p => p.votedId !== "");
-
-                if((rd.phase === 'diskusi' && allClued) || currentTimer <= 0 || (rd.phase === 'vote' && allVoted)) {
-                    clearInterval(interval);
-                    window.timerActive = false;
-                    if(rd.phase === 'diskusi') {
-                        if(rd.round < 2) {
-                            Object.keys(ps).forEach(id => db.ref(`rooms/${curRoom}/players/${id}`).update({ clue: "" }));
-                            db.ref(`rooms/${curRoom}`).update({ round: 2, timer: 30 });
-                        } else {
-                            db.ref(`rooms/${curRoom}`).update({ phase: 'vote', timer: 20 });
-                        }
-                    } else {
-                        processEnd(ps);
-                    }
-                } else {
-                    db.ref(`rooms/${curRoom}`).update({ timer: currentTimer });
-                }
-            }, 1000);
-        }
-
-        function processEnd(ps) {
-            let max = -1; let tid = null;
-            Object.keys(ps).forEach(id => { if(ps[id].votes > max) { max = ps[id].votes; tid = id; } });
-            const overlay = document.getElementById('overlay-result');
-            overlay.classList.remove('hidden'); overlay.classList.add('flex');
             
-            const target = ps[tid];
-            if(target.role === 'spy') {
-                document.getElementById('res-title').innerText = "SPY CAUGHT!";
-                document.getElementById('res-desc').innerText = `${target.name} was the traitor. Citizens Win!`;
-                setTimeout(() => exitGame(), 4000); // Otomatis balik lobby biar bersih
-            } else {
-                document.getElementById('res-title').innerText = "WRONG KICK!";
-                document.getElementById('res-desc').innerText = `${target.name} was a Citizen. All citizens lose 1 HP.`;
-                
-                // Kurangi nyawa semua citizen di Firebase
-                Object.keys(ps).forEach(id => { 
-                    if(ps[id].role === 'citizen') db.ref(`rooms/${curRoom}/players/${id}/lives`).transaction(l => (l || 1) - 1); 
-                });
-
-                setTimeout(() => {
-                    overlay.classList.add('hidden'); 
-                    overlay.classList.remove('flex');
-                    hasVoted = false;
-                    // Reset ronde buat diskusi lagi
-                    if(isHost) {
-                        db.ref(`rooms/${curRoom}`).update({ phase: 'diskusi', round: 1, timer: 30 });
-                        Object.keys(ps).forEach(id => db.ref(`rooms/${curRoom}/players/${id}`).update({ clue: "", votes: 0, votedId: "" }));
+            peer = newPeer;
+            
+            await new Promise((resolve, reject) => {
+                peer.on('open', resolve);
+                peer.on('error', reject);
+                setTimeout(() => reject(new Error('Timeout')), 10000);
+            });
+            
+            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            addLocalVideo(myStream, username);
+            
+            peer.on('call', (incomingCall) => {
+                const callerId = incomingCall.peer;
+                if (!connections.has(callerId)) {
+                    incomingCall.answer(myStream);
+                    incomingCall.on('stream', (remoteStream) => {
+                        addRemoteVideo(remoteStream, callerId);
+                    });
+                    connections.set(callerId, incomingCall);
+                    showToast(`✨ Seseorang bergabung`);
+                    
+                    const dataConn = peer.connect(callerId);
+                    dataConn.on('open', () => {
+                        dataConn.send({ type: 'name', name: currentUsername });
+                    });
+                }
+            });
+            
+            peer.on('connection', (conn) => {
+                conn.on('data', (data) => {
+                    if (data.type === 'name') {
+                        const videoInfo = videoElements.get(conn.peer);
+                        if (videoInfo && videoInfo.nameSpan) {
+                            videoInfo.nameSpan.innerText = data.name;
+                        }
+                    } else if (data.type === 'chat') {
+                        appendChatMessage(data.name, data.text);
+                        showToast(`💬 ${data.name}: ${data.text.substring(0, 40)}`);
                     }
-                }, 4000);
+                });
+            });
+            
+            window.sendChatMessage = (text) => {
+                if (!text.trim()) return;
+                appendChatMessage(currentUsername, text, true);
+                for (let [peerId] of connections.entries()) {
+                    const dataConn = peer.connect(peerId);
+                    dataConn.on('open', () => {
+                        dataConn.send({ type: 'chat', name: currentUsername, text: text });
+                        dataConn.close();
+                    });
+                }
+            };
+            
+            toolbar.style.display = 'flex';
+            joinSheet.classList.add('hide');
+            showToast(`✅ Bergabung sebagai ${username}`);
+            
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal terhubung: " + err.message);
+            await endMeeting();
+        }
+    }
+
+    // Buat ruang baru (random ID)
+    createBtn.onclick = async () => {
+        let username = usernameInput.value.trim();
+        if (!username) {
+            username = "User_" + Math.floor(Math.random() * 1000);
+            usernameInput.value = username;
+        }
+        const newRoom = "room_" + Math.random().toString(36).substring(2, 10);
+        roomInput.value = newRoom;
+        await startMeeting(newRoom, username);
+    };
+
+    // Gabung ke ruang
+    joinBtn.onclick = async () => {
+        let username = usernameInput.value.trim();
+        let roomCode = roomInput.value.trim();
+        if (!username) {
+            username = "User_" + Math.floor(Math.random() * 1000);
+            usernameInput.value = username;
+        }
+        if (!roomCode) {
+            showToast("Masukkan kode ruang");
+            return;
+        }
+        roomCode = roomCode.replace(/\s/g, '-').replace(/[^a-z0-9\-_]/gi, '');
+        await startMeeting(roomCode, username);
+    };
+
+        micBtn.onclick = () => {
+        if (myStream) {
+            const audioTrack = myStream.getAudioTracks()[0];
+            if (audioTrack) {
+                isMicMuted = !isMicMuted;
+                audioTrack.enabled = !isMicMuted;
+                micBtn.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+                
+                // Update badge di video lokal
+                const localCard = document.querySelector('.video-card.local');
+                if (localCard) {
+                    let badge = localCard.querySelector('.mic-badge');
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'mic-badge';
+                        localCard.appendChild(badge);
+                    }
+                    badge.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+                }
+                showToast(isMicMuted ? "Mic mati" : "Mic hidup");
             }
         }
+    };
 
-        function castVote(id) {
-            if(hasVoted) return;
-            hasVoted = true;
-            db.ref(`rooms/${curRoom}/players/${id}/votes`).transaction(c => (c || 0) + 1);
-            db.ref(`rooms/${curRoom}/players/${user.id}`).update({ votedId: id });
-            // Efek feedback visual biar kerasa udah nge-vote
-            console.log("Voted for: " + id);
+    videoBtn.onclick = () => {
+        if (myStream) {
+            const videoTrack = myStream.getVideoTracks()[0];
+            if (videoTrack) {
+                isVideoOff = !isVideoOff;
+                videoTrack.enabled = !isVideoOff;
+                videoBtn.innerHTML = isVideoOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
+                showToast(isVideoOff ? "Kamera OFF" : "Kamera ON");
+            }
         }
+    };
 
-        function sendClue() {
-            const v = document.getElementById('clue-in').value; 
-            if(!v || v.trim() === "") return;
-            db.ref(`rooms/${curRoom}/players/${user.id}`).update({ clue: v });
-            document.getElementById('clue-in').value = "";
+    cameraBtn.onclick = async () => {
+        if (myStream) {
+            const oldVideo = myStream.getVideoTracks()[0];
+            const oldAudio = myStream.getAudioTracks()[0];
+            const oldAudioEnabled = oldAudio ? oldAudio.enabled : true;
+            
+            if (oldVideo) oldVideo.stop();
+            
+            isFrontCamera = !isFrontCamera;
+            
+            try {
+                const newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: isFrontCamera ? "user" : "environment" },
+                    audio: oldAudio ? { echoCancellation: true, noiseSuppression: true } : false
+                });
+                
+                const newVideo = newStream.getVideoTracks()[0];
+                myStream.removeTrack(oldVideo);
+                myStream.addTrack(newVideo);
+                
+                // Kembalikan audio track jika hilang
+                if (oldAudio && !myStream.getAudioTracks().length) {
+                    myStream.addTrack(oldAudio);
+                    oldAudio.enabled = oldAudioEnabled;
+                }
+                
+                // Update video lokal
+                if (localVideoElement) {
+                    localVideoElement.srcObject = myStream;
+                }
+                
+                showToast(isFrontCamera ? "Kamera depan" : "Kamera belakang");
+            } catch(e) {
+                console.error("Gagal ganti kamera:", e);
+                showToast("Gagal ganti kamera");
+                isFrontCamera = !isFrontCamera;
+            }
+        } else {
+            showToast("Belum masuk ruangan");
         }
+    };
 
-        function renderLives() {
-            const l = document.getElementById('g-lives'); 
-            l.innerHTML = "";
-            // Ambil data nyawa terbaru dari user object
-            for(let i=0; i<user.lives; i++) l.innerHTML += '<i class="fa-solid fa-heart"></i>';
+    chatBtn.onclick = () => {
+        chatPanel.classList.toggle('open');
+    };
+
+    hangupBtn.onclick = () => {
+        endMeeting();
+    };
+
+    sendChatBtn.onclick = () => {
+        if (window.sendChatMessage && chatInput.value.trim()) {
+            window.sendChatMessage(chatInput.value.trim());
+            chatInput.value = '';
+        } else if (!peer) {
+            showToast("Belum masuk ruangan");
+        } else if (!chatInput.value.trim()) {
+            showToast("Tulis pesan dulu");
         }
-    </script>
+    };
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatBtn.click();
+        }
+    });
+
+    // Tutup chat panel jika klik di luar
+    document.addEventListener('click', (e) => {
+        if (chatPanel && chatPanel.classList.contains('open')) {
+            if (!chatPanel.contains(e.target) && !chatBtn.contains(e.target)) {
+                chatPanel.classList.remove('open');
+            }
+        }
+    });
+
+    // Cleanup saat halaman ditutup
+    window.addEventListener('beforeunload', () => {
+        if (peer) {
+            peer.destroy();
+        }
+        if (myStream) {
+            myStream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    // Handle error koneksi
+    window.addEventListener('online', () => {
+        showToast("Koneksi kembali");
+    });
+
+    window.addEventListener('offline', () => {
+        showToast("Koneksi terputus");
+    });
+
+    console.log('ZOoLY siap digunakan!');
+</script>
 </body>
 </html>
