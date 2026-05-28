@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>ZOoLY - Video Call</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,7 +14,7 @@
         }
 
         body {
-            font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', system-ui;
+            font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
             background: #000;
             color: white;
             overflow: hidden;
@@ -23,8 +22,8 @@
             width: 100vw;
         }
 
-        /* BOOTING SCREEN */
-        .booting-screen {
+        /* BOOTING */
+        .booting {
             position: fixed;
             top: 0;
             left: 0;
@@ -35,52 +34,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: transform 0.4s ease;
             transform: translateY(0);
         }
-
-        .booting-screen.hide {
-            transform: translateY(-100%);
-            pointer-events: none;
-        }
-
-        .booting-content {
-            text-align: center;
-            animation: fadeUp 0.6s ease;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .booting-logo {
-            font-size: 80px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #0a84ff, #5e5ce0);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 16px;
-        }
-
-        .booting-title {
-            font-size: 44px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 12px;
-        }
-
-        .booting-dots {
-            font-size: 20px;
-            color: #0a84ff;
-        }
+        .booting.hide { transform: translateY(-100%); pointer-events: none; }
+        .booting-logo { font-size: 80px; margin-bottom: 16px; }
+        .booting-title { font-size: 44px; font-weight: 700; letter-spacing: -1px; }
 
         /* JOIN SHEET */
         .join-sheet {
@@ -88,27 +47,19 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(28, 28, 30, 0.95);
+            background: rgba(28, 28, 30, 0.96);
             backdrop-filter: blur(40px);
             border-radius: 32px 32px 0 0;
             padding: 28px 24px 44px;
             z-index: 90;
-            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: transform 0.3s ease;
             transform: translateY(0);
             border-top: 0.5px solid rgba(255,255,255,0.1);
         }
-
-        .join-sheet.hide {
-            transform: translateY(100%);
-        }
-
-        .sheet-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
-
-        .ios-input {
+        .join-sheet.hide { transform: translateY(100%); }
+        .sheet-title { font-size: 28px; font-weight: 700; margin-bottom: 24px; }
+        
+        .input-field {
             background: rgba(120,120,128,0.2);
             border: 0.5px solid rgba(255,255,255,0.3);
             border-radius: 14px;
@@ -119,18 +70,9 @@
             margin-bottom: 16px;
             outline: none;
         }
-
-        .ios-input:focus {
-            border-color: #0a84ff;
-            box-shadow: 0 0 0 3px rgba(10,132,255,0.3);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
+        .input-field:focus { border-color: #0a84ff; }
+        
+        .btn-group { display: flex; gap: 12px; margin-top: 8px; }
         .btn {
             flex: 1;
             border-radius: 44px;
@@ -139,22 +81,40 @@
             font-size: 16px;
             border: none;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: 0.1s;
         }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: #0a84ff; color: white; }
+        .btn-secondary { background: rgba(120,120,128,0.4); color: white; }
 
-        .btn:active {
-            transform: scale(0.97);
+        /* STATUS BAR */
+        .status-bar {
+            position: fixed;
+            top: 50px;
+            left: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 10px 20px;
+            z-index: 95;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            transition: 0.2s;
+            opacity: 0;
+            pointer-events: none;
         }
-
-        .btn-primary {
+        .status-bar.show { opacity: 1; pointer-events: auto; }
+        .status-badge {
             background: #0a84ff;
-            color: white;
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 12px;
         }
-
-        .btn-secondary {
-            background: rgba(120,120,128,0.3);
-            color: white;
-        }
+        .status-online { background: #34c759; }
+        .status-offline { background: #ff3b30; }
 
         /* VIDEO GRID */
         .video-grid {
@@ -164,10 +124,9 @@
             padding: 16px;
             height: 100vh;
             overflow-y: auto;
-            padding-top: 16px;
+            padding-top: 100px;
             padding-bottom: 100px;
         }
-
         .video-card {
             position: relative;
             background: #1c1c1e;
@@ -176,17 +135,8 @@
             aspect-ratio: 4/3;
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-
-        .video-card video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .video-card.local video {
-            transform: scaleX(-1);
-        }
-
+        .video-card video { width: 100%; height: 100%; object-fit: cover; }
+        .video-card.local video { transform: scaleX(-1); }
         .video-name {
             position: absolute;
             bottom: 12px;
@@ -196,10 +146,7 @@
             padding: 6px 14px;
             border-radius: 30px;
             font-size: 13px;
-            font-weight: 500;
-            z-index: 10;
         }
-
         .mic-badge {
             position: absolute;
             bottom: 12px;
@@ -208,7 +155,6 @@
             border-radius: 30px;
             padding: 6px 10px;
             font-size: 12px;
-            z-index: 10;
         }
 
         /* TOOLBAR */
@@ -226,7 +172,6 @@
             z-index: 80;
             border: 0.5px solid rgba(255,255,255,0.15);
         }
-
         .tool-btn {
             background: rgba(120,120,128,0.4);
             border: none;
@@ -236,23 +181,11 @@
             color: white;
             font-size: 24px;
             cursor: pointer;
-            transition: 0.1s;
         }
+        .tool-btn:active { transform: scale(0.92); background: #0a84ff; }
+        .tool-hangup { background: #ff3b30; }
 
-        .tool-btn:active {
-            transform: scale(0.92);
-            background: #0a84ff;
-        }
-
-        .tool-hangup {
-            background: #ff3b30;
-        }
-
-        .tool-hangup:active {
-            background: #ff3b30;
-        }
-
-        /* CHAT PANEL */
+        /* CHAT */
         .chat-panel {
             position: fixed;
             bottom: 100px;
@@ -263,55 +196,15 @@
             border-radius: 28px;
             z-index: 85;
             transform: translateX(360px);
-            transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: 0.3s ease;
             border: 0.5px solid rgba(255,255,255,0.15);
-            overflow: hidden;
         }
-
-        .chat-panel.open {
-            transform: translateX(0);
-        }
-
-        .chat-header {
-            padding: 16px;
-            font-weight: 600;
-            border-bottom: 0.5px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-        }
-
-        .chat-messages {
-            height: 340px;
-            overflow-y: auto;
-            padding: 12px;
-            font-size: 14px;
-        }
-
-        .chat-input-area {
-            display: flex;
-            padding: 12px;
-            gap: 8px;
-            border-top: 0.5px solid rgba(255,255,255,0.1);
-        }
-
-        .chat-input-area input {
-            flex: 1;
-            background: #2c2c2e;
-            border: none;
-            border-radius: 30px;
-            padding: 12px 16px;
-            color: white;
-            font-size: 15px;
-        }
-
-        .chat-input-area button {
-            background: #0a84ff;
-            border: none;
-            border-radius: 30px;
-            padding: 0 18px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        .chat-panel.open { transform: translateX(0); }
+        .chat-header { padding: 16px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .chat-msgs { height: 340px; overflow-y: auto; padding: 12px; font-size: 14px; }
+        .chat-input-area { display: flex; padding: 12px; gap: 8px; border-top: 0.5px solid rgba(255,255,255,0.1); }
+        .chat-input-area input { flex: 1; background: #2c2c2e; border: none; border-radius: 30px; padding: 12px 16px; color: white; }
+        .chat-input-area button { background: #0a84ff; border: none; border-radius: 30px; padding: 0 18px; color: white; cursor: pointer; }
 
         .toast {
             position: fixed;
@@ -329,29 +222,41 @@
             opacity: 0;
             pointer-events: none;
         }
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
-<div id="booting" class="booting-screen">
-    <div class="booting-content">
+<div id="booting" class="booting">
+    <div style="text-align:center">
         <div class="booting-logo">🎥</div>
         <div class="booting-title">ZOoLY</div>
-        <div class="booting-dots">•••</div>
     </div>
 </div>
 
 <div id="joinSheet" class="join-sheet">
     <div class="sheet-title">ZOoLY</div>
-    <input type="text" id="usernameInput" class="ios-input" placeholder="Nama kamu" autocomplete="off">
-    <input type="text" id="roomInput" class="ios-input" placeholder="Kode ruang" autocomplete="off">
+    <input type="text" id="usernameInput" class="input-field" placeholder="Nama kamu" autocomplete="off">
+    <input type="text" id="roomInput" class="input-field" placeholder="Kode ruang" autocomplete="off">
     <div class="btn-group">
         <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Ruang</button>
         <button id="joinBtn" class="btn btn-secondary"><i class="fas fa-sign-in-alt"></i> Gabung</button>
     </div>
 </div>
 
-<div id="videoGrid" class="video-grid"></div>
+<div id="statusBar" class="status-bar">
+    <span><i class="fas fa-circle" style="color:#34c759; font-size:10px;"></i> <span id="statusText">Belum terhubung</span></span>
+    <span id="roomStatus" class="status-badge">-</span>
+</div>
+
+<div id="videoGrid" class="video-grid">
+    <div class="empty-state">🎥 Belum ada video<br>Buat atau gabung ruang dulu</div>
+</div>
 
 <div id="toolbar" class="toolbar" style="display: none;">
     <button id="micBtn" class="tool-btn"><i class="fas fa-microphone"></i></button>
@@ -363,7 +268,7 @@
 
 <div id="chatPanel" class="chat-panel">
     <div class="chat-header"><i class="fas fa-comment"></i> Chat</div>
-    <div id="chatMessages" class="chat-messages"></div>
+    <div id="chatMessages" class="chat-msgs"></div>
     <div class="chat-input-area">
         <input type="text" id="chatInput" placeholder="Pesan...">
         <button id="sendChatBtn">Kirim</button>
@@ -373,11 +278,14 @@
 <div id="toastMsg" class="toast"></div>
 
 <script>
-    // DOM Elements
+    // ==================== DOM Elements ====================
     const booting = document.getElementById('booting');
     const joinSheet = document.getElementById('joinSheet');
     const videoGrid = document.getElementById('videoGrid');
     const toolbar = document.getElementById('toolbar');
+    const statusBar = document.getElementById('statusBar');
+    const statusText = document.getElementById('statusText');
+    const roomStatus = document.getElementById('roomStatus');
     const usernameInput = document.getElementById('usernameInput');
     const roomInput = document.getElementById('roomInput');
     const createBtn = document.getElementById('createBtn');
@@ -393,10 +301,10 @@
     const sendChatBtn = document.getElementById('sendChatBtn');
     const toastMsg = document.getElementById('toastMsg');
 
-    // State
+    // ==================== State ====================
     let peer = null;
     let myStream = null;
-    let currentRoom = null;
+    let currentRoomId = null;
     let currentUsername = "";
     let connections = new Map();
     let videoElements = new Map();
@@ -408,34 +316,47 @@
     function showToast(msg, duration = 2000) {
         toastMsg.textContent = msg;
         toastMsg.style.opacity = '1';
-        setTimeout(() => {
-            toastMsg.style.opacity = '0';
-        }, duration);
+        setTimeout(() => toastMsg.style.opacity = '0', duration);
     }
 
-    // Hilangkan booting
-    setTimeout(() => {
-        booting.classList.add('hide');
-        setTimeout(() => booting.style.display = 'none', 500);
-    }, 1200);
-
-    // Set default
-    usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
-    roomInput.value = "";
+    function updateStatus(status, roomName = null) {
+        statusText.innerText = status;
+        if (roomName) {
+            roomStatus.innerText = roomName.length > 20 ? roomName.slice(0,17)+'...' : roomName;
+            roomStatus.classList.add('status-online');
+        } else {
+            roomStatus.innerText = '-';
+            roomStatus.classList.remove('status-online');
+        }
+        statusBar.classList.add('show');
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+        return str.replace(/[&<>]/g, (m) => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    }
+
+    function showEmptyState(show) {
+        const empty = videoGrid.querySelector('.empty-state');
+        if (show) {
+            if (!empty) {
+                const div = document.createElement('div');
+                div.className = 'empty-state';
+                div.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
+                videoGrid.appendChild(div);
+            }
+        } else {
+            if (empty) empty.remove();
+        }
     }
 
     function addLocalVideo(stream, username) {
+        // Hapus empty state
+        showEmptyState(false);
+        
         const container = document.createElement('div');
         container.className = 'video-card local';
+        container.id = 'local-video-card';
         const video = document.createElement('video');
         video.srcObject = stream;
         video.autoplay = true;
@@ -456,6 +377,8 @@
 
     function addRemoteVideo(stream, peerId, userName = null) {
         if (videoElements.has(peerId)) return;
+        showEmptyState(false);
+        
         const container = document.createElement('div');
         container.className = 'video-card';
         const video = document.createElement('video');
@@ -471,6 +394,17 @@
         videoElements.set(peerId, { container, video, nameSpan });
     }
 
+    function removeRemoteVideo(peerId) {
+        const el = videoElements.get(peerId);
+        if (el && el.container) el.container.remove();
+        videoElements.delete(peerId);
+        
+        // Kalo cuma tinggal local, tampilkan empty state
+        if (videoElements.size === 0 && document.querySelectorAll('.video-card').length <= 1) {
+            showEmptyState(true);
+        }
+    }
+
     function appendChatMessage(sender, text, isOwn = false) {
         const msgDiv = document.createElement('div');
         msgDiv.style.marginBottom = '10px';
@@ -484,6 +418,7 @@
 
     async function endMeeting() {
         showToast("Meninggalkan ruangan");
+        updateStatus("Meninggalkan...");
         
         if (peer) {
             for (let [id, conn] of connections.entries()) {
@@ -500,51 +435,70 @@
         }
         
         videoElements.clear();
-        if (videoGrid) videoGrid.innerHTML = '';
+        if (videoGrid) {
+            // Hapus semua video card
+            const cards = videoGrid.querySelectorAll('.video-card');
+            cards.forEach(c => c.remove());
+            showEmptyState(true);
+        }
+        
         if (toolbar) toolbar.style.display = 'none';
         if (joinSheet) joinSheet.classList.remove('hide');
         if (chatMessages) chatMessages.innerHTML = '';
         if (chatPanel) chatPanel.classList.remove('open');
         
+        currentRoomId = null;
         isMicMuted = false;
         isVideoOff = false;
-        isFrontCamera = true;
         localVideoElement = null;
         
         if (micBtn) micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
         if (videoBtn) videoBtn.innerHTML = '<i class="fas fa-video"></i>';
+        
+        updateStatus("Belum terhubung", null);
     }
 
     async function startMeeting(roomCode, username) {
         if (peer) await endMeeting();
         
         currentUsername = username;
-        currentRoom = roomCode;
+        currentRoomId = roomCode;
         
+        updateStatus("Mengakses kamera...", roomCode);
         showToast(`Menghubung ke ${roomCode}...`);
         
         try {
-            const newPeer = new Peer(undefined, {
-                host: 'peerjs-server.herokuapp.com',
+            // Coba akses kamera dulu
+            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            
+            // Buat peer dengan ID berdasarkan room+username
+            const peerId = roomCode + "-" + Math.random().toString(36).substring(2, 8);
+            
+            peer = new Peer(peerId, {
+                host: '0.peerjs.com',
                 port: 443,
                 secure: true,
                 path: '/'
             });
             
-            peer = newPeer;
-            
             await new Promise((resolve, reject) => {
-                peer.on('open', resolve);
-                peer.on('error', reject);
-                setTimeout(() => reject(new Error('Timeout')), 10000);
+                const timeout = setTimeout(() => reject(new Error('Timeout koneksi')), 15000);
+                peer.on('open', () => { clearTimeout(timeout); resolve(); });
+                peer.on('error', (err) => { clearTimeout(timeout); reject(err); });
             });
             
-            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            addLocalVideo(myStream, username);
+            updateStatus("Terhubung, menunggu peserta...", roomCode);
+            showToast(`✅ Bergabung sebagai ${username}`);
             
+            // Tambah video lokal
+            addLocalVideo(myStream, username);
+            toolbar.style.display = 'flex';
+            joinSheet.classList.add('hide');
+            
+            // Handle incoming call
             peer.on('call', (incomingCall) => {
                 const callerId = incomingCall.peer;
-                if (!connections.has(callerId)) {
+                if (!connections.has(callerId) && callerId !== peer.id) {
                     incomingCall.answer(myStream);
                     incomingCall.on('stream', (remoteStream) => {
                         addRemoteVideo(remoteStream, callerId);
@@ -552,13 +506,17 @@
                     connections.set(callerId, incomingCall);
                     showToast(`✨ Seseorang bergabung`);
                     
-                    const dataConn = peer.connect(callerId);
-                    dataConn.on('open', () => {
-                        dataConn.send({ type: 'name', name: currentUsername });
+                    // Kirim nama via data
+                    const conn = peer.connect(callerId);
+                    conn.on('open', () => {
+                        conn.send({ type: 'name', name: currentUsername });
+                        conn.send({ type: 'room', room: roomCode });
+                        conn.close();
                     });
                 }
             });
             
+            // Handle data connection
             peer.on('connection', (conn) => {
                 conn.on('data', (data) => {
                     if (data.type === 'name') {
@@ -569,194 +527,231 @@
                     } else if (data.type === 'chat') {
                         appendChatMessage(data.name, data.text);
                         showToast(`💬 ${data.name}: ${data.text.substring(0, 40)}`);
+                    } else if (data.type === 'ping') {
+                        // respon
+                        const reply = peer.connect(conn.peer);
+                        reply.on('open', () => {
+                            reply.send({ type: 'pong', name: currentUsername });
+                            reply.close();
+                        });
                     }
                 });
             });
             
-            window.sendChatMessage = (text) => {
-                if (!text.trim()) return;
-                appendChatMessage(currentUsername, text, true);
-                for (let [peerId] of connections.entries()) {
-                    const dataConn = peer.connect(peerId);
-                    dataConn.on('open', () => {
-                        dataConn.send({ type: 'chat', name: currentUsername, text: text });
-                        dataConn.close();
-                    });
-                }
-            };
+                // Coba cari peer lain di room yang sama (panggil balik)
+    // Kita akan coba call semua peer yang mungkin sudah ada
+    setTimeout(() => {
+        if (peer && peer.listAllPeers) {
+            peer.listAllPeers((peers) => {
+                peers.forEach(pid => {
+                    if (pid !== peer.id && !connections.has(pid) && pid.includes(roomCode.split('-')[0])) {
+                        const call = peer.call(pid, myStream);
+                        call.on('stream', (stream) => {
+                            addRemoteVideo(stream, pid);
+                        });
+                        connections.set(pid, call);
+                        showToast(`📞 Menghubungkan dengan peserta lain`);
+                    }
+                });
+            });
+        }
+    }, 1000);
+    
+    // Simpan sendChat
+    window.sendChatMessage = (text) => {
+        if (!text.trim()) return;
+        appendChatMessage(currentUsername, text, true);
+        for (let [peerId] of connections.entries()) {
+            const dataConn = peer.connect(peerId);
+            dataConn.on('open', () => {
+                dataConn.send({ type: 'chat', name: currentUsername, text: text });
+                dataConn.close();
+            });
+        }
+    };
+    
+} catch (err) {
+    console.error(err);
+    showToast("Gagal: " + err.message);
+    updateStatus("Gagal terhubung", null);
+    if (myStream) {
+        myStream.getTracks().forEach(t => t.stop());
+        myStream = null;
+    }
+}
+}
+
+// Buat ruang
+createBtn.onclick = async () => {
+    let username = usernameInput.value.trim();
+    if (!username) {
+        username = "User_" + Math.floor(Math.random() * 1000);
+        usernameInput.value = username;
+    }
+    const newRoom = "zooly_" + Math.random().toString(36).substring(2, 10);
+    roomInput.value = newRoom;
+    await startMeeting(newRoom, username);
+};
+
+// Gabung ruang
+joinBtn.onclick = async () => {
+    let username = usernameInput.value.trim();
+    let roomCode = roomInput.value.trim();
+    if (!username) {
+        username = "User_" + Math.floor(Math.random() * 1000);
+        usernameInput.value = username;
+    }
+    if (!roomCode) {
+        showToast("Masukkan kode ruang");
+        return;
+    }
+    roomCode = roomCode.replace(/\s/g, '-').replace(/[^a-z0-9\-_]/gi, '');
+    await startMeeting(roomCode, username);
+};
+
+// Mic toggle
+micBtn.onclick = () => {
+    if (myStream) {
+        const audioTrack = myStream.getAudioTracks()[0];
+        if (audioTrack) {
+            isMicMuted = !isMicMuted;
+            audioTrack.enabled = !isMicMuted;
+            micBtn.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
             
-            toolbar.style.display = 'flex';
-            joinSheet.classList.add('hide');
-            showToast(`✅ Bergabung sebagai ${username}`);
-            
-        } catch (err) {
-            console.error(err);
-            showToast("Gagal terhubung: " + err.message);
-            await endMeeting();
+            const localCard = document.getElementById('local-video-card');
+            if (localCard) {
+                let badge = localCard.querySelector('.mic-badge');
+                if (badge) badge.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+            }
+            showToast(isMicMuted ? "Mic mati" : "Mic hidup");
+        }
+    } else {
+        showToast("Belum masuk ruangan");
+    }
+};
+
+// Video toggle
+videoBtn.onclick = () => {
+    if (myStream) {
+        const videoTrack = myStream.getVideoTracks()[0];
+        if (videoTrack) {
+            isVideoOff = !isVideoOff;
+            videoTrack.enabled = !isVideoOff;
+            videoBtn.innerHTML = isVideoOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
+            showToast(isVideoOff ? "Kamera OFF" : "Kamera ON");
+        }
+    } else {
+        showToast("Belum masuk ruangan");
+    }
+};
+
+// Ganti kamera (depan/belakang)
+cameraBtn.onclick = async () => {
+    if (myStream) {
+        const oldVideo = myStream.getVideoTracks()[0];
+        const oldAudio = myStream.getAudioTracks()[0];
+        const oldAudioEnabled = oldAudio ? oldAudio.enabled : true;
+        
+        if (oldVideo) oldVideo.stop();
+        isFrontCamera = !isFrontCamera;
+        
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: isFrontCamera ? "user" : "environment" },
+                audio: oldAudio ? { echoCancellation: true, noiseSuppression: true } : false
+            });
+            const newVideo = newStream.getVideoTracks()[0];
+            myStream.removeTrack(oldVideo);
+            myStream.addTrack(newVideo);
+            if (oldAudio && !myStream.getAudioTracks().length) {
+                myStream.addTrack(oldAudio);
+                oldAudio.enabled = oldAudioEnabled;
+            }
+            if (localVideoElement) localVideoElement.srcObject = myStream;
+            showToast(isFrontCamera ? "📱 Kamera depan" : "📷 Kamera belakang");
+        } catch(e) {
+            console.error("Gagal ganti kamera:", e);
+            showToast("Gagal ganti kamera");
+            isFrontCamera = !isFrontCamera;
+        }
+    } else {
+        showToast("Belum masuk ruangan");
+    }
+};
+
+// Buka/tutup chat panel
+chatBtn.onclick = () => {
+    chatPanel.classList.toggle('open');
+};
+
+// Hangup / tinggalkan ruangan
+hangupBtn.onclick = () => {
+    endMeeting();
+};
+
+// Kirim pesan chat
+sendChatBtn.onclick = () => {
+    if (window.sendChatMessage && chatInput.value.trim()) {
+        window.sendChatMessage(chatInput.value.trim());
+        chatInput.value = '';
+    } else if (!peer) {
+        showToast("Belum masuk ruangan");
+    } else if (!chatInput.value.trim()) {
+        showToast("Tulis pesan dulu");
+    }
+};
+
+// Enter untuk kirim chat
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        sendChatBtn.click();
+    }
+});
+
+// Tutup chat panel jika klik di luar
+document.addEventListener('click', (e) => {
+    if (chatPanel && chatPanel.classList.contains('open')) {
+        if (!chatPanel.contains(e.target) && !chatBtn.contains(e.target)) {
+            chatPanel.classList.remove('open');
         }
     }
+});
 
-    // Buat ruang baru (random ID)
-    createBtn.onclick = async () => {
-        let username = usernameInput.value.trim();
-        if (!username) {
-            username = "User_" + Math.floor(Math.random() * 1000);
-            usernameInput.value = username;
-        }
-        const newRoom = "room_" + Math.random().toString(36).substring(2, 10);
-        roomInput.value = newRoom;
-        await startMeeting(newRoom, username);
-    };
+// Hilangkan booting setelah 1 detik
+setTimeout(() => {
+    booting.classList.add('hide');
+    setTimeout(() => booting.style.display = 'none', 400);
+}, 1000);
 
-    // Gabung ke ruang
-    joinBtn.onclick = async () => {
-        let username = usernameInput.value.trim();
-        let roomCode = roomInput.value.trim();
-        if (!username) {
-            username = "User_" + Math.floor(Math.random() * 1000);
-            usernameInput.value = username;
-        }
-        if (!roomCode) {
-            showToast("Masukkan kode ruang");
-            return;
-        }
-        roomCode = roomCode.replace(/\s/g, '-').replace(/[^a-z0-9\-_]/gi, '');
-        await startMeeting(roomCode, username);
-    };
+// Set default username random
+usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
+roomInput.value = "";
 
-        micBtn.onclick = () => {
-        if (myStream) {
-            const audioTrack = myStream.getAudioTracks()[0];
-            if (audioTrack) {
-                isMicMuted = !isMicMuted;
-                audioTrack.enabled = !isMicMuted;
-                micBtn.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
-                
-                // Update badge di video lokal
-                const localCard = document.querySelector('.video-card.local');
-                if (localCard) {
-                    let badge = localCard.querySelector('.mic-badge');
-                    if (!badge) {
-                        badge = document.createElement('div');
-                        badge.className = 'mic-badge';
-                        localCard.appendChild(badge);
-                    }
-                    badge.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
-                }
-                showToast(isMicMuted ? "Mic mati" : "Mic hidup");
-            }
-        }
-    };
+// Cleanup saat halaman ditutup
+window.addEventListener('beforeunload', () => {
+    if (peer) {
+        peer.destroy();
+    }
+    if (myStream) {
+        myStream.getTracks().forEach(track => track.stop());
+    }
+});
 
-    videoBtn.onclick = () => {
-        if (myStream) {
-            const videoTrack = myStream.getVideoTracks()[0];
-            if (videoTrack) {
-                isVideoOff = !isVideoOff;
-                videoTrack.enabled = !isVideoOff;
-                videoBtn.innerHTML = isVideoOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
-                showToast(isVideoOff ? "Kamera OFF" : "Kamera ON");
-            }
-        }
-    };
+// Handle koneksi internet (online/offline)
+window.addEventListener('online', () => {
+    showToast("Koneksi kembali");
+    if (!peer && currentRoomId) {
+        showToast("Silakan buat/gabung ulang ruangan");
+    }
+});
 
-    cameraBtn.onclick = async () => {
-        if (myStream) {
-            const oldVideo = myStream.getVideoTracks()[0];
-            const oldAudio = myStream.getAudioTracks()[0];
-            const oldAudioEnabled = oldAudio ? oldAudio.enabled : true;
-            
-            if (oldVideo) oldVideo.stop();
-            
-            isFrontCamera = !isFrontCamera;
-            
-            try {
-                const newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: isFrontCamera ? "user" : "environment" },
-                    audio: oldAudio ? { echoCancellation: true, noiseSuppression: true } : false
-                });
-                
-                const newVideo = newStream.getVideoTracks()[0];
-                myStream.removeTrack(oldVideo);
-                myStream.addTrack(newVideo);
-                
-                // Kembalikan audio track jika hilang
-                if (oldAudio && !myStream.getAudioTracks().length) {
-                    myStream.addTrack(oldAudio);
-                    oldAudio.enabled = oldAudioEnabled;
-                }
-                
-                // Update video lokal
-                if (localVideoElement) {
-                    localVideoElement.srcObject = myStream;
-                }
-                
-                showToast(isFrontCamera ? "Kamera depan" : "Kamera belakang");
-            } catch(e) {
-                console.error("Gagal ganti kamera:", e);
-                showToast("Gagal ganti kamera");
-                isFrontCamera = !isFrontCamera;
-            }
-        } else {
-            showToast("Belum masuk ruangan");
-        }
-    };
+window.addEventListener('offline', () => {
+    showToast("Koneksi terputus");
+    updateStatus("Koneksi putus", currentRoomId);
+});
 
-    chatBtn.onclick = () => {
-        chatPanel.classList.toggle('open');
-    };
-
-    hangupBtn.onclick = () => {
-        endMeeting();
-    };
-
-    sendChatBtn.onclick = () => {
-        if (window.sendChatMessage && chatInput.value.trim()) {
-            window.sendChatMessage(chatInput.value.trim());
-            chatInput.value = '';
-        } else if (!peer) {
-            showToast("Belum masuk ruangan");
-        } else if (!chatInput.value.trim()) {
-            showToast("Tulis pesan dulu");
-        }
-    };
-
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendChatBtn.click();
-        }
-    });
-
-    // Tutup chat panel jika klik di luar
-    document.addEventListener('click', (e) => {
-        if (chatPanel && chatPanel.classList.contains('open')) {
-            if (!chatPanel.contains(e.target) && !chatBtn.contains(e.target)) {
-                chatPanel.classList.remove('open');
-            }
-        }
-    });
-
-    // Cleanup saat halaman ditutup
-    window.addEventListener('beforeunload', () => {
-        if (peer) {
-            peer.destroy();
-        }
-        if (myStream) {
-            myStream.getTracks().forEach(track => track.stop());
-        }
-    });
-
-    // Handle error koneksi
-    window.addEventListener('online', () => {
-        showToast("Koneksi kembali");
-    });
-
-    window.addEventListener('offline', () => {
-        showToast("Koneksi terputus");
-    });
-
-    console.log('ZOoLY siap digunakan!');
+console.log('ZOoLY siap digunakan!');
 </script>
 </body>
 </html>
