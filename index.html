@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>ZOoLY - Video Call + Teman</title>
+    <title>ZOoLY - Video Call</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -22,30 +22,35 @@
             width: 100vw;
         }
 
-        /* BOOTING */
-        .booting {
+        /* LOGO DI HOME SCREEN */
+        .home-logo {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0a84ff, #5e5ce0, #30b0c0);
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            transform: translateY(0);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.15;
         }
-        .booting.hide { transform: translateY(-100%); pointer-events: none; }
-        .booting-content { text-align: center; animation: bounceIn 0.8s ease; }
-        @keyframes bounceIn {
-            0% { opacity: 0; transform: scale(0.5); }
-            60% { opacity: 1; transform: scale(1.1); }
-            100% { transform: scale(1); }
+        .home-logo .logo-icon {
+            font-size: 100px;
+            margin-bottom: 10px;
         }
-        .booting-logo { font-size: 90px; margin-bottom: 16px; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.3)); }
-        .booting-title { font-size: 48px; font-weight: 800; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .home-logo .logo-text {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #0a84ff, #5e5ce0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .home-logo .logo-sub {
+            font-size: 12px;
+            color: #8e8e93;
+            margin-top: 8px;
+        }
 
         /* JOIN SHEET */
         .join-sheet {
@@ -63,7 +68,7 @@
             border-top: 0.5px solid rgba(255,255,255,0.1);
         }
         .join-sheet.hide { transform: translateY(100%); }
-        .sheet-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .sheet-title { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
         .sheet-sub { font-size: 13px; color: #8e8e93; margin-bottom: 24px; }
         
         .input-field {
@@ -95,7 +100,6 @@
         .btn-secondary { background: rgba(120,120,128,0.4); color: white; }
         .btn-random { background: #34c759; color: white; }
 
-        /* ROOM MODE TOGGLE */
         .mode-toggle {
             display: flex;
             gap: 12px;
@@ -114,10 +118,7 @@
             font-size: 14px;
             font-weight: 500;
         }
-        .mode-option.active {
-            background: #0a84ff;
-            color: white;
-        }
+        .mode-option.active { background: #0a84ff; color: white; }
 
         /* STATUS BAR */
         .status-bar {
@@ -148,10 +149,10 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 12px;
             padding: 16px;
-            height: 100vh;
+            height: calc(100vh - 160px);
             overflow-y: auto;
-            padding-top: 100px;
-            padding-bottom: 100px;
+            margin-top: 80px;
+            margin-bottom: 80px;
         }
         .video-card {
             position: relative;
@@ -174,6 +175,7 @@
             border-radius: 30px;
             font-size: 12px;
             font-weight: 500;
+            z-index: 5;
         }
         .mic-badge {
             position: absolute;
@@ -183,6 +185,7 @@
             border-radius: 30px;
             padding: 6px 10px;
             font-size: 11px;
+            z-index: 5;
         }
 
         /* TOOLBAR */
@@ -194,20 +197,20 @@
             background: rgba(28,28,30,0.95);
             backdrop-filter: blur(40px);
             border-radius: 60px;
-            padding: 10px 16px;
+            padding: 8px 16px;
             display: flex;
             justify-content: space-around;
-            z-index: 80;
+            z-index: 100;
             border: 0.5px solid rgba(255,255,255,0.15);
         }
         .tool-btn {
             background: rgba(120,120,128,0.4);
             border: none;
-            width: 52px;
-            height: 52px;
+            width: 50px;
+            height: 50px;
             border-radius: 40px;
             color: white;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
             transition: 0.1s;
             position: relative;
@@ -221,32 +224,32 @@
             right: -5px;
             background: #ff3b30;
             border-radius: 20px;
-            padding: 3px 6px;
-            font-size: 10px;
+            padding: 2px 5px;
+            font-size: 9px;
             font-weight: bold;
-            min-width: 18px;
+            min-width: 16px;
         }
 
-        /* CHAT PANEL (Home Screen) */
+        /* CHAT PANEL */
         .chat-home {
             position: fixed;
-            bottom: 100px;
+            bottom: 90px;
             left: 16px;
             right: 16px;
             background: rgba(30,30,35,0.98);
             backdrop-filter: blur(50px);
-            border-radius: 32px;
-            z-index: 85;
+            border-radius: 28px;
+            z-index: 105;
             transform: translateY(500px);
             transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             border: 0.5px solid rgba(255,255,255,0.15);
-            max-height: 70vh;
+            max-height: 60vh;
             display: flex;
             flex-direction: column;
         }
         .chat-home.open { transform: translateY(0); }
         .chat-header {
-            padding: 16px;
+            padding: 14px 16px;
             font-weight: 600;
             border-bottom: 0.5px solid rgba(255,255,255,0.1);
             display: flex;
@@ -270,8 +273,8 @@
             flex: 1;
             overflow-y: auto;
             padding: 12px;
-            min-height: 300px;
-            max-height: 400px;
+            min-height: 250px;
+            max-height: 350px;
         }
         .chat-message {
             margin-bottom: 12px;
@@ -280,15 +283,9 @@
             max-width: 85%;
             word-break: break-word;
         }
-        .chat-message.sent {
-            background: #0a84ff;
-            align-self: flex-end;
-            margin-left: auto;
-        }
-        .chat-message.received {
-            background: #2c2c2e;
-        }
-        .message-sender { font-size: 11px; color: #8e8e93; margin-bottom: 4px; }
+        .chat-message.sent { background: #0a84ff; margin-left: auto; }
+        .chat-message.received { background: #2c2c2e; }
+        .message-sender { font-size: 11px; color: #aaa; margin-bottom: 4px; }
         .chat-input-area {
             display: flex;
             padding: 12px;
@@ -299,65 +296,54 @@
             background: #2c2c2e;
             border: none;
             border-radius: 30px;
-            padding: 12px;
+            padding: 10px;
             color: white;
-            font-size: 13px;
+            font-size: 12px;
         }
         .chat-input-area input {
             flex: 1;
             background: #2c2c2e;
             border: none;
             border-radius: 30px;
-            padding: 12px 16px;
+            padding: 10px 16px;
             color: white;
-            font-size: 15px;
+            font-size: 14px;
         }
         .chat-input-area button {
             background: #0a84ff;
             border: none;
             border-radius: 30px;
-            padding: 0 18px;
+            padding: 0 16px;
             color: white;
             cursor: pointer;
         }
 
-        /* FRIEND REQUEST POPUP */
         .friend-popup {
             position: fixed;
             top: 100px;
-            right: 16px;
             left: 16px;
+            right: 16px;
             background: rgba(30,30,35,0.98);
             backdrop-filter: blur(40px);
             border-radius: 28px;
-            z-index: 100;
-            transform: translateX(400px);
+            z-index: 110;
+            transform: translateY(-500px);
             transition: 0.3s;
             border: 0.5px solid rgba(255,255,255,0.2);
         }
-        .friend-popup.open { transform: translateX(0); }
+        .friend-popup.open { transform: translateY(0); }
         .friend-popup-header {
             padding: 16px;
             font-weight: 600;
             border-bottom: 0.5px solid rgba(255,255,255,0.1);
         }
         .friend-request-item {
-            padding: 16px;
+            padding: 14px 16px;
             border-bottom: 0.5px solid rgba(255,255,255,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .friend-actions button {
-            background: #0a84ff;
-            border: none;
-            border-radius: 20px;
-            padding: 8px 16px;
-            margin-left: 8px;
-            color: white;
-            cursor: pointer;
-        }
-
         .toast {
             position: fixed;
             bottom: 100px;
@@ -384,25 +370,25 @@
 </head>
 <body>
 
-<div id="booting" class="booting">
-    <div class="booting-content">
-        <div class="booting-logo">🎥✨</div>
-        <div class="booting-title">ZOoLY</div>
-    </div>
+<!-- LOGO DI HOME SCREEN -->
+<div id="homeLogo" class="home-logo">
+    <div class="logo-icon">🎥</div>
+    <div class="logo-text">ZOoLY</div>
+    <div class="logo-sub">video call · teman · chat</div>
 </div>
 
 <div id="joinSheet" class="join-sheet">
     <div class="sheet-title">ZOoLY</div>
-    <div class="sheet-sub">Video Call + Teman · Tanpa Login</div>
+    <div class="sheet-sub">Video Call · Tanpa Login</div>
     <input type="text" id="usernameInput" class="input-field" placeholder="Nama kamu" autocomplete="off">
     <div class="mode-toggle">
-        <div class="mode-option" data-mode="public">🌍 Public</div>
+        <div class="mode-option active" data-mode="public">🌍 Public</div>
         <div class="mode-option" data-mode="private">🔒 Private</div>
     </div>
-    <input type="text" id="roomInput" class="input-field" placeholder="Kode ruang (opsional)" autocomplete="off">
+    <input type="text" id="roomInput" class="input-field" placeholder="Kode ruang" autocomplete="off">
     <div class="btn-group">
-        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Ruang</button>
-        <button id="randomRoomBtn" class="btn btn-random"><i class="fas fa-dice"></i> Random Room</button>
+        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat</button>
+        <button id="randomRoomBtn" class="btn btn-random"><i class="fas fa-dice"></i> Random</button>
         <button id="joinBtn" class="btn btn-secondary"><i class="fas fa-sign-in-alt"></i> Gabung</button>
     </div>
 </div>
@@ -425,7 +411,6 @@
     <button id="hangupBtn" class="tool-btn tool-hangup"><i class="fas fa-phone-slash"></i></button>
 </div>
 
-<!-- CHAT HOME SCREEN -->
 <div id="chatHome" class="chat-home">
     <div class="chat-header">
         <span><i class="fas fa-comment"></i> Pesan</span>
@@ -445,9 +430,8 @@
     </div>
 </div>
 
-<!-- FRIEND REQUEST POPUP -->
 <div id="friendPopup" class="friend-popup">
-    <div class="friend-popup-header"><i class="fas fa-user-friends"></i> Permintaan Teman</div>
+    <div class="friend-popup-header"><i class="fas fa-user-friends"></i> Pengguna di Ruangan</div>
     <div id="friendRequestsList"></div>
 </div>
 
@@ -466,15 +450,14 @@
         projectId: "xbook-global26",
         storageBucket: "xbook-global26.firebasestorage.app",
         messagingSenderId: "384795261277",
-        appId: "1:384795261277:web:6a2b05dbea819b4f4590b4",
-        measurementId: "G-KY0TWNKLK0"
+        appId: "1:384795261277:web:6a2b05dbea819b4f4590b4"
     };
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     // DOM Elements
-    const booting = document.getElementById('booting');
+    const homeLogo = document.getElementById('homeLogo');
     const joinSheet = document.getElementById('joinSheet');
     const videoGrid = document.getElementById('videoGrid');
     const toolbar = document.getElementById('toolbar');
@@ -514,15 +497,16 @@
     let isVideoOff = false;
     let isFrontCamera = true;
     let localVideoElement = null;
-    let roomMode = "public"; // public / private
-    let friends = new Set(); // teman yang sudah diterima
-    let pendingRequests = new Map(); // pending friend requests
-    let roomUsers = new Map(); // userId -> username
+    let roomMode = "public";
+    let friends = new Set();
+    let pendingRequests = new Map();
+    let roomUsers = new Map();
 
     const configuration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
         ]
     };
 
@@ -530,6 +514,22 @@
         toastMsg.textContent = msg;
         toastMsg.style.opacity = '1';
         setTimeout(() => toastMsg.style.opacity = '0', 2000);
+    }
+
+    function playJoinSound() {
+        try {
+            const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+            audio.volume = 0.2;
+            audio.play().catch(e => {});
+        } catch(e) {}
+    }
+    
+    function playLeaveSound() {
+        try {
+            const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3');
+            audio.volume = 0.2;
+            audio.play().catch(e => {});
+        } catch(e) {}
     }
 
     function updateStatus(status, roomName = null) {
@@ -547,6 +547,7 @@
     function addLocalVideo(stream, username) {
         const empty = videoGrid.querySelector('.empty-state');
         if (empty) empty.remove();
+        homeLogo.style.opacity = '0';
         
         const container = document.createElement('div');
         container.className = 'video-card local';
@@ -559,10 +560,10 @@
         const nameSpan = document.createElement('div');
         nameSpan.className = 'video-name';
         nameSpan.innerText = username;
-                const micSpan = document.createElement('div');
+        const micSpan = document.createElement('div');
         micSpan.className = 'mic-badge';
         micSpan.innerHTML = '<i class="fas fa-microphone"></i>';
-        container.appendChild(video);
+                container.appendChild(video);
         container.appendChild(nameSpan);
         container.appendChild(micSpan);
         videoGrid.appendChild(container);
@@ -573,6 +574,7 @@
         if (document.getElementById(`remote-${peerId}`)) return;
         const empty = videoGrid.querySelector('.empty-state');
         if (empty) empty.remove();
+        homeLogo.style.opacity = '0';
         
         const container = document.createElement('div');
         container.className = 'video-card';
@@ -597,10 +599,11 @@
             div.className = 'empty-state';
             div.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
             videoGrid.appendChild(div);
+            homeLogo.style.opacity = '0.15';
         }
     }
 
-    function appendChatMessage(sender, text, isOwn = false, to = null) {
+    function appendChatMessage(sender, text, isOwn = false) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `chat-message ${isOwn ? 'sent' : 'received'}`;
         if (!isOwn) {
@@ -622,24 +625,17 @@
         friendNotif.innerText = count;
     }
 
-    function renderFriendRequests() {
-        friendRequestsList.innerHTML = '';
-        if (pendingRequests.size === 0) {
-            friendRequestsList.innerHTML = '<div style="padding:16px; text-align:center; color:#8e8e93;">Tidak ada permintaan teman</div>';
+    function sendFriendRequest(targetUserId, targetUsername) {
+        if (friends.has(targetUserId)) {
+            showToast(`Sudah berteman dengan ${targetUsername}`);
             return;
         }
-        pendingRequests.forEach((req, fromId) => {
-            const div = document.createElement('div');
-            div.className = 'friend-request-item';
-            div.innerHTML = `
-                <span><strong>${escapeHtml(req.fromName)}</strong> mengirim permintaan teman</span>
-                <div class="friend-actions">
-                    <button onclick="window.acceptFriendRequest('${fromId}', '${escapeHtml(req.fromName)}')">✓ Terima</button>
-                    <button onclick="window.rejectFriendRequest('${fromId}')" style="background:#ff3b30;">✗ Tolak</button>
-                </div>
-            `;
-            friendRequestsList.appendChild(div);
+        database.ref(`friendRequests/${targetUserId}/${myUserId}`).set({
+            from: myUserId,
+            fromName: currentUsername,
+            timestamp: Date.now()
         });
+        showToast(`Permintaan teman dikirim ke ${targetUsername}`);
     }
 
     function acceptFriendRequest(fromId, fromName) {
@@ -649,16 +645,14 @@
         database.ref(`friendRequests/${myUserId}/${fromId}`).remove();
         pendingRequests.delete(fromId);
         updateFriendNotif();
-        renderFriendRequests();
         updateChatSelect();
-        showToast(`✨ ${fromName} sekarang teman Anda!`);
+        showToast(`${fromName} sekarang teman Anda!`);
     }
 
     function rejectFriendRequest(fromId) {
         database.ref(`friendRequests/${myUserId}/${fromId}`).remove();
         pendingRequests.delete(fromId);
         updateFriendNotif();
-        renderFriendRequests();
         showToast(`Permintaan ditolak`);
     }
 
@@ -670,25 +664,6 @@
                 chatToSelect.innerHTML += `<option value="${userId}">${isFriend ? '⭐' : '👤'} ${escapeHtml(username)}</option>`;
             }
         }
-    }
-
-    function sendPrivateMessage(toUserId, text) {
-        if (!toUserId || !text.trim()) return;
-        database.ref(`privateMessages/${toUserId}`).push({
-            from: myUserId,
-            fromName: currentUsername,
-            text: text,
-            timestamp: Date.now()
-        });
-        // Tampilkan di chat local sebagai sent
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-message sent';
-        const textSpan = document.createElement('div');
-        textSpan.innerText = text;
-        msgDiv.appendChild(textSpan);
-        chatMessagesList.appendChild(msgDiv);
-        chatMessagesList.scrollTop = chatMessagesList.scrollHeight;
-        showToast(`💬 Pesan terkirim ke ${roomUsers.get(toUserId) || 'teman'}`);
     }
 
     function sendPublicMessage(text) {
@@ -704,17 +679,22 @@
         }
     }
 
-    function sendMessage() {
-        const text = chatHomeInput.value.trim();
-        const target = chatToSelect.value;
-        if (!text) return;
-        
-        if (target === 'all') {
-            sendPublicMessage(text);
-        } else {
-            sendPrivateMessage(target, text);
-        }
-        chatHomeInput.value = '';
+    function sendPrivateMessage(toUserId, text) {
+        if (!toUserId || !text.trim()) return;
+        database.ref(`privateMessages/${toUserId}`).push({
+            from: myUserId,
+            fromName: currentUsername,
+            text: text,
+            timestamp: Date.now()
+        });
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'chat-message sent';
+        const textSpan = document.createElement('div');
+        textSpan.innerText = text;
+        msgDiv.appendChild(textSpan);
+        chatMessagesList.appendChild(msgDiv);
+        chatMessagesList.scrollTop = chatMessagesList.scrollHeight;
+        showToast(`💬 Pesan terkirim`);
     }
 
     function escapeHtml(str) {
@@ -725,70 +705,22 @@
     // WebRTC Functions
     async function createPeerConnection(targetUserId, isInitiator = false) {
         const pc = new RTCPeerConnection(configuration);
-        if (myStream) {
-            myStream.getTracks().forEach(track => {
-                pc.addTrack(track, myStream);
-            });
-        }
+        if (myStream) myStream.getTracks().forEach(track => pc.addTrack(track, myStream));
         
-        pc.ontrack = (event) => {
-            addRemoteVideo(event.streams[0], targetUserId, roomUsers.get(targetUserId) || 'Teman');
-        };
-        
+        pc.ontrack = (event) => addRemoteVideo(event.streams[0], targetUserId, roomUsers.get(targetUserId) || 'Teman');
         pc.onicecandidate = (event) => {
             if (event.candidate && roomRef) {
                 roomRef.child(`candidates/${targetUserId}/${myUserId}`).push(event.candidate.toJSON());
             }
         };
-        
         peerConnections.set(targetUserId, pc);
         
         if (isInitiator) {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-            if (roomRef) {
-                await roomRef.child(`offers/${targetUserId}`).set({
-                    sdp: offer.sdp,
-                    type: offer.type,
-                    from: myUserId
-                });
-            }
+            if (roomRef) await roomRef.child(`offers/${targetUserId}`).set({ sdp: offer.sdp, type: offer.type, from: myUserId });
         }
         return pc;
-    }
-
-    async function handleOffer(offerData, fromId) {
-        let pc = peerConnections.get(fromId);
-        if (!pc) {
-            pc = await createPeerConnection(fromId, false);
-        }
-        await pc.setRemoteDescription(new RTCSessionDescription(offerData));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        if (roomRef) {
-            await roomRef.child(`answers/${fromId}/${myUserId}`).set({
-                sdp: answer.sdp,
-                type: answer.type
-            });
-        }
-    }
-
-    async function handleAnswer(answerData, fromId) {
-        const pc = peerConnections.get(fromId);
-        if (pc && !pc.remoteDescription) {
-            await pc.setRemoteDescription(new RTCSessionDescription(answerData));
-        }
-    }
-
-    async function handleCandidate(candidateData, fromId) {
-        const pc = peerConnections.get(fromId);
-        if (pc) {
-            try {
-                await pc.addIceCandidate(new RTCIceCandidate(candidateData));
-            } catch(e) {
-                console.error('Error adding ICE candidate:', e);
-            }
-        }
     }
 
     async function startMeeting(roomCode, username) {
@@ -808,39 +740,25 @@
             joinSheet.classList.add('hide');
             
             roomRef = database.ref(`rooms/${roomCode}`);
-            
-            // Daftarkan user ke room
-            await roomRef.child(`users/${myUserId}`).set({
-                username: username,
-                timestamp: Date.now(),
-                mode: roomMode
-            });
-            
-            // Auto cleanup saat disconnect
+            await roomRef.child(`users/${myUserId}`).set({ username: username, timestamp: Date.now(), mode: roomMode });
             roomRef.child(`users/${myUserId}`).onDisconnect().remove();
             
             updateStatus(`Terhubung ke ${roomCode}`, roomCode);
-            showToast(`✅ Bergabung sebagai ${username} | Mode: ${roomMode === 'public' ? 'Public 🌍' : 'Private 🔒'}`);
+            showToast(`✅ Bergabung sebagai ${username}`);
+            playJoinSound();
             
-            // Load friends dari database
+            // Load friends
             database.ref(`friends/${myUserId}`).once('value', (snap) => {
-                snap.forEach((child) => {
-                    friends.add(child.key);
-                });
+                snap.forEach((child) => { friends.add(child.key); });
                 updateChatSelect();
             });
             
-            // Listener friend requests
             database.ref(`friendRequests/${myUserId}`).on('value', (snap) => {
                 pendingRequests.clear();
-                snap.forEach((child) => {
-                    pendingRequests.set(child.key, child.val());
-                });
+                snap.forEach((child) => { pendingRequests.set(child.key, child.val()); });
                 updateFriendNotif();
-                renderFriendRequests();
             });
             
-            // Listener private messages
             database.ref(`privateMessages/${myUserId}`).on('child_added', (userSnap) => {
                 userSnap.forEach((msgSnap) => {
                     const msg = msgSnap.val();
@@ -848,82 +766,70 @@
                 });
             });
             
-            // Listener users di room
-            roomRef.child('users').on('child_added', async (snapshot) => {
-                const peerId = snapshot.key;
-                const peerData = snapshot.val();
+            roomRef.child('users').on('child_added', async (snap) => {
+                const peerId = snap.key;
+                const peerData = snap.val();
                 roomUsers.set(peerId, peerData.username);
-                
                 if (peerId !== myUserId && !peerConnections.has(peerId)) {
-                    showToast(`✨ ${peerData.username} bergabung ke ruang`);
+                    showToast(`✨ ${peerData.username} bergabung`);
+                    playJoinSound();
                     updateChatSelect();
-                    
-                    // Untuk private room, hanya connect jika sudah berteman
-                    if (roomMode === 'private' && !friends.has(peerId)) {
-                        showToast(`🔒 ${peerData.username} di ruang private, berteman dulu untuk video call`);
-                        return;
-                    }
                     await createPeerConnection(peerId, true);
                 }
             });
             
-            // Listener user keluar
-            roomRef.child('users').on('child_removed', (snapshot) => {
-                const peerId = snapshot.key;
+            roomRef.child('users').on('child_removed', (snap) => {
+                const peerId = snap.key;
                 const pc = peerConnections.get(peerId);
-                if (pc) {
-                    pc.close();
-                    peerConnections.delete(peerId);
-                }
+                if (pc) { pc.close(); peerConnections.delete(peerId); }
                 removeRemoteVideo(peerId);
                 roomUsers.delete(peerId);
                 updateChatSelect();
+                playLeaveSound();
                 showToast(`🚶 Seseorang meninggalkan ruangan`);
             });
             
-            // Listener WebRTC signaling
-            roomRef.child('offers').on('child_added', async (offerSnapshot) => {
-                const fromId = offerSnapshot.key;
-                if (fromId !== myUserId) {
-                    const offerData = offerSnapshot.val();
-                    await handleOffer(offerData, fromId);
+            roomRef.child('offers').on('child_added', async (snap) => {
+                if (snap.key !== myUserId) {
+                    let pc = peerConnections.get(snap.key);
+                    if (!pc) pc = await createPeerConnection(snap.key, false);
+                    await pc.setRemoteDescription(new RTCSessionDescription(snap.val()));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    await roomRef.child(`answers/${snap.key}/${myUserId}`).set({ sdp: answer.sdp, type: answer.type });
                 }
             });
             
-            roomRef.child('answers').on('child_added', async (answerSnapshot) => {
-                const fromId = answerSnapshot.key;
-                if (fromId !== myUserId) {
-                    const answers = answerSnapshot.val();
-                    for (let [answererId, answerData] of Object.entries(answers)) {
-                        if (answererId === myUserId) {
-                            await handleAnswer(answerData, fromId);
+            roomRef.child('answers').on('child_added', async (snap) => {
+                if (snap.key !== myUserId) {
+                    for (let [aid, ans] of Object.entries(snap.val())) {
+                        if (aid === myUserId) {
+                            const pc = peerConnections.get(snap.key);
+                            if (pc) await pc.setRemoteDescription(new RTCSessionDescription(ans));
                         }
                     }
                 }
             });
             
-            roomRef.child('candidates').on('child_added', async (candidateSnapshot) => {
-                const fromId = candidateSnapshot.key;
-                if (fromId !== myUserId) {
-                    const candidates = candidateSnapshot.val();
-                    for (let [candidateId, candidateData] of Object.entries(candidates)) {
-                        if (candidateId !== myUserId) {
-                            await handleCandidate(candidateData, fromId);
+            roomRef.child('candidates').on('child_added', async (snap) => {
+                if (snap.key !== myUserId) {
+                    for (let [cid, cand] of Object.entries(snap.val())) {
+                        if (cid !== myUserId) {
+                            const pc = peerConnections.get(snap.key);
+                            if (pc) await pc.addIceCandidate(new RTCIceCandidate(cand));
                         }
                     }
                 }
             });
             
-            // Public chat listener
-            roomRef.child('chat').on('child_added', (snapshot) => {
-                const msg = snapshot.val();
+            roomRef.child('chat').on('child_added', (snap) => {
+                const msg = snap.val();
                 if (msg.userId !== myUserId) {
                     appendChatMessage(msg.username, msg.text, false);
                     showToast(`💬 ${msg.username}: ${msg.text.substring(0, 40)}`);
                 }
             });
             
-            // Simpan fungsi send ke window
             window.sendPublicMessage = sendPublicMessage;
             
         } catch (err) {
@@ -940,36 +846,26 @@
     async function endMeeting() {
         showToast("Meninggalkan ruangan...");
         updateStatus("Meninggalkan...");
+        playLeaveSound();
         
-        // Tutup semua peer connection
         for (let [peerId, pc] of peerConnections.entries()) {
-            try {
-                pc.close();
-            } catch(e) {}
+            try { pc.close(); } catch(e) {}
         }
         peerConnections.clear();
         
-        // Hapus dari Firebase
         if (roomRef && myUserId) {
             try {
                 await roomRef.child(`users/${myUserId}`).remove();
-                await roomRef.child(`offers/${myUserId}`).remove();
-                await roomRef.child(`answers/${myUserId}`).remove();
-                await roomRef.child(`candidates/${myUserId}`).remove();
                 roomRef.off();
             } catch(e) {}
             roomRef = null;
         }
         
-        // Hentikan stream
         if (myStream) {
-            myStream.getTracks().forEach(track => {
-                try { track.stop(); } catch(e) {}
-            });
+            myStream.getTracks().forEach(track => { try { track.stop(); } catch(e) {} });
             myStream = null;
         }
         
-        // Hapus semua video
         const cards = videoGrid.querySelectorAll('.video-card');
         cards.forEach(c => c.remove());
         
@@ -977,6 +873,7 @@
         empty.className = 'empty-state';
         empty.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
         videoGrid.appendChild(empty);
+        homeLogo.style.opacity = '0.15';
         
         toolbar.style.display = 'none';
         joinSheet.classList.remove('hide');
@@ -999,7 +896,6 @@
 
     // ==================== EVENT HANDLERS ====================
     
-    // Mode toggle (Public/Private)
     document.querySelectorAll('.mode-option').forEach(opt => {
         opt.onclick = () => {
             document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('active'));
@@ -1008,7 +904,6 @@
         };
     });
     
-    // Buat ruang baru
     createBtn.onclick = async () => {
         let username = usernameInput.value.trim();
         if (!username) {
@@ -1020,7 +915,6 @@
         await startMeeting(newRoom, username);
     };
     
-    // Random Room
     randomRoomBtn.onclick = async () => {
         let username = usernameInput.value.trim();
         if (!username) {
@@ -1035,7 +929,6 @@
         await startMeeting(randomRoom, username);
     };
     
-    // Gabung ke ruang
     joinBtn.onclick = async () => {
         let username = usernameInput.value.trim();
         let roomCode = roomInput.value.trim();
@@ -1051,7 +944,6 @@
         await startMeeting(roomCode, username);
     };
     
-    // Toggle microphone
     micBtn.onclick = () => {
         if (myStream) {
             const audioTrack = myStream.getAudioTracks()[0];
@@ -1067,10 +959,11 @@
                 }
                 showToast(isMicMuted ? "Mic mati" : "Mic hidup");
             }
+        } else {
+            showToast("Belum masuk ruangan");
         }
     };
     
-        // Toggle video
     videoBtn.onclick = () => {
         if (myStream) {
             const videoTrack = myStream.getVideoTracks()[0];
@@ -1085,7 +978,6 @@
         }
     };
     
-    // Ganti kamera depan/belakang
     cameraBtn.onclick = async () => {
         if (myStream) {
             const oldVideo = myStream.getVideoTracks()[0];
@@ -1109,7 +1001,6 @@
                 }
                 if (localVideoElement) localVideoElement.srcObject = myStream;
                 
-                // Update tracks di semua peer connection
                 for (let [peerId, pc] of peerConnections.entries()) {
                     try {
                         const sender = pc.getSenders().find(s => s.track?.kind === 'video');
@@ -1118,7 +1009,6 @@
                 }
                 showToast(isFrontCamera ? "📱 Kamera depan" : "📷 Kamera belakang");
             } catch(e) {
-                console.error("Gagal ganti kamera:", e);
                 showToast("Gagal ganti kamera");
                 isFrontCamera = !isFrontCamera;
             }
@@ -1127,7 +1017,6 @@
         }
     };
     
-    // Tombol teman - buka popup request
     friendBtn.onclick = () => {
         if (!roomRef) {
             showToast("Belum masuk ruangan");
@@ -1145,7 +1034,7 @@
                 const isFriend = friends.has(userId);
                 options += `<div class="friend-request-item" style="justify-content:space-between">
                     <span><i class="fas fa-user-circle"></i> <strong>${escapeHtml(username)}</strong> ${isFriend ? '<span style="color:#34c759;">⭐ Teman</span>' : ''}</span>
-                    ${!isFriend ? `<button onclick="window.sendFriendRequestFromPopup('${userId}', '${escapeHtml(username)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:8px 16px; color:white; cursor:pointer;">➕ Tambah Teman</button>` : '<span style="color:#34c759;"><i class="fas fa-check-circle"></i> Sudah teman</span>'}
+                    ${!isFriend ? `<button onclick="window.sendFriendRequestFromPopup('${userId}', '${escapeHtml(username)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:8px 16px; color:white; cursor:pointer;">➕ Tambah</button>` : '<span style="color:#34c759;"><i class="fas fa-check-circle"></i> Sudah</span>'}
                 </div>`;
             }
         }
@@ -1154,7 +1043,6 @@
         friendPopup.classList.add('open');
     };
     
-    // Tombol chat home
     chatHomeBtn.onclick = () => {
         if (!roomRef) {
             showToast("Belum masuk ruangan");
@@ -1166,13 +1054,11 @@
     
     closeChatHome.onclick = () => chatHome.classList.remove('open');
     
-    // Hangup / tinggalkan ruangan
     hangupBtn.onclick = () => {
         endMeeting();
     };
     
-    // Kirim chat
-    sendChatHomeBtn.onclick = () => {
+        sendChatHomeBtn.onclick = () => {
         const text = chatHomeInput.value.trim();
         const target = chatToSelect.value;
         if (!text) {
@@ -1195,13 +1081,17 @@
         }
     });
     
-    // Fungsi sendFriendRequest dari popup
+    // Fungsi untuk send friend request dari popup
     window.sendFriendRequestFromPopup = (userId, username) => {
         sendFriendRequest(userId, username);
         friendPopup.classList.remove('open');
     };
     
-    // Tutup friend popup jika klik di luar
+    // Expose fungsi ke global untuk tombol di popup
+    window.acceptFriendRequest = acceptFriendRequest;
+    window.rejectFriendRequest = rejectFriendRequest;
+    
+    // Tutup popup jika klik di luar
     document.addEventListener('click', (e) => {
         if (friendPopup.classList.contains('open')) {
             if (!friendPopup.contains(e.target) && !friendBtn.contains(e.target)) {
@@ -1215,24 +1105,9 @@
         }
     });
     
-    // Hilangkan booting dengan animasi
-    setTimeout(() => {
-        booting.classList.add('hide');
-        setTimeout(() => booting.style.display = 'none', 500);
-    }, 1500);
-    
     // Set default username random
     usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
     roomInput.value = "";
-    
-    // Mode default public
-    roomMode = "public";
-    document.querySelector('.mode-option[data-mode="public"]').classList.add('active');
-    
-    // Expose functions ke window global
-    window.acceptFriendRequest = acceptFriendRequest;
-    window.rejectFriendRequest = rejectFriendRequest;
-    window.sendFriendRequest = sendFriendRequest;
     
     // Cleanup saat halaman ditutup
     window.addEventListener('beforeunload', () => {
@@ -1257,8 +1132,7 @@
         updateStatus("Koneksi putus", currentRoomId);
     });
     
-    console.log('✨ ZOoLY siap digunakan! ✨');
-    console.log('Fitur: Random Room | Public/Private Mode | Pertemanan | Chat Pribadi | Video Call');
+    console.log('✨ ZOoLY siap! Fitur lengkap: video call, chat, teman, public/private room, random room');
 </script>
 </body>
 </html>
