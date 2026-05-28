@@ -114,7 +114,6 @@
             font-size: 12px;
         }
         .status-online { background: #34c759; }
-        .status-offline { background: #ff3b30; }
 
         /* VIDEO GRID */
         .video-grid {
@@ -277,7 +276,27 @@
 
 <div id="toastMsg" class="toast"></div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
 <script>
+    // ==================== Firebase Config ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
+        authDomain: "xbook-global26.firebaseapp.com",
+        databaseURL: "https://xbook-global26-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "xbook-global26",
+        storageBucket: "xbook-global26.firebasestorage.app",
+        messagingSenderId: "384795261277",
+        appId: "1:384795261277:web:6a2b05dbea819b4f4590b4",
+        measurementId: "G-KY0TWNKLK0"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     // ==================== DOM Elements ====================
     const booting = document.getElementById('booting');
     const joinSheet = document.getElementById('joinSheet');
@@ -302,16 +321,24 @@
     const toastMsg = document.getElementById('toastMsg');
 
     // ==================== State ====================
-    let peer = null;
+    let peerConnections = new Map(); // peerId -> RTCPeerConnection
     let myStream = null;
     let currentRoomId = null;
     let currentUsername = "";
-    let connections = new Map();
-    let videoElements = new Map();
+    let myUserId = null;
+    let roomRef = null;
     let isMicMuted = false;
     let isVideoOff = false;
     let isFrontCamera = true;
     let localVideoElement = null;
+
+    const configuration = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+    };
 
     function showToast(msg, duration = 2000) {
         toastMsg.textContent = msg;
@@ -351,7 +378,6 @@
     }
 
     function addLocalVideo(stream, username) {
-        // Hapus empty state
         showEmptyState(false);
         
         const container = document.createElement('div');
@@ -376,11 +402,12 @@
     }
 
     function addRemoteVideo(stream, peerId, userName = null) {
-        if (videoElements.has(peerId)) return;
+        if (document.getElementById(`remote-${peerId}`)) return;
         showEmptyState(false);
         
         const container = document.createElement('div');
         container.className = 'video-card';
+        container.id = `remote-${peerId}`;
         const video = document.createElement('video');
         video.srcObject = stream;
         video.autoplay = true;
@@ -391,16 +418,13 @@
         container.appendChild(video);
         container.appendChild(nameSpan);
         videoGrid.appendChild(container);
-        videoElements.set(peerId, { container, video, nameSpan });
     }
 
     function removeRemoteVideo(peerId) {
-        const el = videoElements.get(peerId);
-        if (el && el.container) el.container.remove();
-        videoElements.delete(peerId);
+        const el = document.getElementById(`remote-${peerId}`);
+        if (el) el.remove();
         
-        // Kalo cuma tinggal local, tampilkan empty state
-        if (videoElements.size === 0 && document.querySelectorAll('.video-card').length <= 1) {
+        if (peerConnections.size === 0 && document.querySelectorAll('.video-card').length <= 1) {
             showEmptyState(true);
         }
     }
@@ -416,38 +440,246 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    async function createPeerConnection(targetUserId, isInitiator = false) {
+        const pc = new RTCPeerConnection(configuration);
+        
+        // Tambahkan track lokal
+        if (myStream) {
+            myStream.getTracks().forEach(track => {
+                pc.addTrack(track, myStream);
+            });
+        }
+        
+        // Handle remote stream
+        pc.ontrack = (event) => {
+            addRemoteVideo(event.streams[0], targetUserId);
+        };
+        
+        // Handle ICE candidates
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                const candidateRef = roomRef.child(`candidates/${targetUserId}/${myUserId}`);
+                candidateRef.push(event.candidate.toJSON());
+            }
+        };
+        
+        peerConnections.set(targetUserId, pc);
+        
+        if (isInitiator) {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            await roomRef.child(`offers/${targetUserId}`).set({
+                sdp: offer.sdp,
+                type: offer.type,
+                from: myUserId
+            });
+        }
+        
+        return pc;
+    }
+
+    async function handleOffer(offerData, fromId) {
+        let pc = peerConnections.get(fromId);
+        if (!pc) {
+            pc = await createPeerConnection(fromId, false);
+        }
+        
+        await pc.setRemoteDescription(new RTCSessionDescription(offerData));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await roomRef.child(`answers/${fromId}/${myUserId}`).set({
+            sdp: answer.sdp,
+            type: answer.type,
+            from: myUserId
+        });
+    }
+
+    async function handleAnswer(answerData, fromId) {
+        const pc = peerConnections.get(fromId);
+        if (pc && pc.remoteDescription === null) {
+            await pc.setRemoteDescription(new RTCSessionDescription(answerData));
+        }
+    }
+
+    async function handleCandidate(candidateData, fromId) {
+        const pc = peerConnections.get(fromId);
+        if (pc) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidateData));
+            } catch(e) {
+                console.error('Error adding ICE candidate:', e);
+            }
+        }
+    }
+
+    async function startMeeting(roomCode, username) {
+        if (roomRef) {
+            await endMeeting();
+        }
+        
+        currentUsername = username;
+        currentRoomId = roomCode;
+        myUserId = `${username}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        
+        updateStatus("Mengakses kamera...", roomCode);
+        showToast(`Menghubung ke ${roomCode}...`);
+        
+        try {
+            // Dapatkan stream lokal
+            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            addLocalVideo(myStream, username);
+            toolbar.style.display = 'flex';
+            joinSheet.classList.add('hide');
+            
+            // Referensi ke room di Firebase
+            roomRef = database.ref(`rooms/${roomCode}`);
+            
+            // Daftarkan user ke room
+            const userRef = roomRef.child(`users/${myUserId}`);
+            await userRef.set({
+                username: username,
+                timestamp: Date.now()
+            });
+            
+            updateStatus(`Terhubung ke ${roomCode}`, roomCode);
+            showToast(`✅ Bergabung sebagai ${username}`);
+            
+            // Set onDisconnect untuk hapus user saat keluar
+            userRef.onDisconnect().remove();
+            
+            // Dengarkan user baru yang masuk
+            roomRef.child('users').on('child_added', async (snapshot) => {
+                const peerId = snapshot.key;
+                const peerData = snapshot.val();
+                
+                                if (peerId !== myUserId && !peerConnections.has(peerId)) {
+                    showToast(`✨ ${peerData.username} bergabung`);
+                    await createPeerConnection(peerId, true);
+                }
+            });
+            
+            // Dengarkan user yang keluar
+            roomRef.child('users').on('child_removed', (snapshot) => {
+                const peerId = snapshot.key;
+                const pc = peerConnections.get(peerId);
+                if (pc) {
+                    pc.close();
+                    peerConnections.delete(peerId);
+                }
+                removeRemoteVideo(peerId);
+                showToast(`🚶 Seseorang meninggalkan ruangan`);
+            });
+            
+            // Dengarkan offer
+            roomRef.child('offers').on('child_added', async (offerSnapshot) => {
+                const fromId = offerSnapshot.key;
+                if (fromId !== myUserId) {
+                    const offerData = offerSnapshot.val();
+                    await handleOffer(offerData, fromId);
+                }
+            });
+            
+            // Dengarkan answer
+            roomRef.child('answers').on('child_added', async (answerSnapshot) => {
+                const fromId = answerSnapshot.key;
+                if (fromId !== myUserId) {
+                    const answers = answerSnapshot.val();
+                    for (let [answererId, answerData] of Object.entries(answers)) {
+                        if (answererId === myUserId) {
+                            await handleAnswer(answerData, fromId);
+                        }
+                    }
+                }
+            });
+            
+            // Dengarkan ICE candidates
+            roomRef.child('candidates').on('child_added', async (candidateSnapshot) => {
+                const fromId = candidateSnapshot.key;
+                if (fromId !== myUserId) {
+                    const candidates = candidateSnapshot.val();
+                    for (let [candidateId, candidateData] of Object.entries(candidates)) {
+                        if (candidateId !== myUserId) {
+                            await handleCandidate(candidateData, fromId);
+                        }
+                    }
+                }
+            });
+            
+            // Chat listener
+            roomRef.child('chat').on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                if (msg.userId !== myUserId) {
+                    appendChatMessage(msg.username, msg.text);
+                    showToast(`💬 ${msg.username}: ${msg.text.substring(0, 40)}`);
+                }
+            });
+            
+            window.sendChatMessage = (text) => {
+                if (!text.trim()) return;
+                appendChatMessage(currentUsername, text, true);
+                roomRef.child('chat').push({
+                    userId: myUserId,
+                    username: currentUsername,
+                    text: text,
+                    timestamp: Date.now()
+                });
+            };
+            
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal: " + err.message);
+            updateStatus("Gagal terhubung", null);
+            if (myStream) {
+                myStream.getTracks().forEach(t => t.stop());
+                myStream = null;
+            }
+        }
+    }
+
     async function endMeeting() {
         showToast("Meninggalkan ruangan");
         updateStatus("Meninggalkan...");
         
-        if (peer) {
-            for (let [id, conn] of connections.entries()) {
-                try { if (conn && conn.close) conn.close(); } catch(e) {}
-            }
-            connections.clear();
-            peer.destroy();
-            peer = null;
+        // Tutup semua peer connection
+        for (let [peerId, pc] of peerConnections.entries()) {
+            try {
+                pc.close();
+            } catch(e) {}
+        }
+        peerConnections.clear();
+        
+        // Hapus dari Firebase
+        if (roomRef && myUserId) {
+            try {
+                await roomRef.child(`users/${myUserId}`).remove();
+                await roomRef.child(`offers/${myUserId}`).remove();
+                await roomRef.child(`answers/${myUserId}`).remove();
+                await roomRef.child(`candidates/${myUserId}`).remove();
+                roomRef.off();
+            } catch(e) {}
+            roomRef = null;
         }
         
+        // Hentikan stream
         if (myStream) {
-            myStream.getTracks().forEach(track => track.stop());
+            myStream.getTracks().forEach(track => {
+                try { track.stop(); } catch(e) {}
+            });
             myStream = null;
         }
         
-        videoElements.clear();
-        if (videoGrid) {
-            // Hapus semua video card
-            const cards = videoGrid.querySelectorAll('.video-card');
-            cards.forEach(c => c.remove());
-            showEmptyState(true);
-        }
+        // Hapus semua video
+        const cards = videoGrid.querySelectorAll('.video-card');
+        cards.forEach(c => c.remove());
+        showEmptyState(true);
         
-        if (toolbar) toolbar.style.display = 'none';
-        if (joinSheet) joinSheet.classList.remove('hide');
-        if (chatMessages) chatMessages.innerHTML = '';
-        if (chatPanel) chatPanel.classList.remove('open');
+        toolbar.style.display = 'none';
+        joinSheet.classList.remove('hide');
+        chatMessages.innerHTML = '';
+        chatPanel.classList.remove('open');
         
         currentRoomId = null;
+        myUserId = null;
         isMicMuted = false;
         isVideoOff = false;
         localVideoElement = null;
@@ -458,300 +690,185 @@
         updateStatus("Belum terhubung", null);
     }
 
-    async function startMeeting(roomCode, username) {
-        if (peer) await endMeeting();
-        
-        currentUsername = username;
-        currentRoomId = roomCode;
-        
-        updateStatus("Mengakses kamera...", roomCode);
-        showToast(`Menghubung ke ${roomCode}...`);
-        
-        try {
-            // Coba akses kamera dulu
-            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            
-            // Buat peer dengan ID berdasarkan room+username
-            const peerId = roomCode + "-" + Math.random().toString(36).substring(2, 8);
-            
-            peer = new Peer(peerId, {
-                host: '0.peerjs.com',
-                port: 443,
-                secure: true,
-                path: '/'
-            });
-            
-            await new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => reject(new Error('Timeout koneksi')), 15000);
-                peer.on('open', () => { clearTimeout(timeout); resolve(); });
-                peer.on('error', (err) => { clearTimeout(timeout); reject(err); });
-            });
-            
-            updateStatus("Terhubung, menunggu peserta...", roomCode);
-            showToast(`✅ Bergabung sebagai ${username}`);
-            
-            // Tambah video lokal
-            addLocalVideo(myStream, username);
-            toolbar.style.display = 'flex';
-            joinSheet.classList.add('hide');
-            
-            // Handle incoming call
-            peer.on('call', (incomingCall) => {
-                const callerId = incomingCall.peer;
-                if (!connections.has(callerId) && callerId !== peer.id) {
-                    incomingCall.answer(myStream);
-                    incomingCall.on('stream', (remoteStream) => {
-                        addRemoteVideo(remoteStream, callerId);
-                    });
-                    connections.set(callerId, incomingCall);
-                    showToast(`✨ Seseorang bergabung`);
-                    
-                    // Kirim nama via data
-                    const conn = peer.connect(callerId);
-                    conn.on('open', () => {
-                        conn.send({ type: 'name', name: currentUsername });
-                        conn.send({ type: 'room', room: roomCode });
-                        conn.close();
-                    });
-                }
-            });
-            
-            // Handle data connection
-            peer.on('connection', (conn) => {
-                conn.on('data', (data) => {
-                    if (data.type === 'name') {
-                        const videoInfo = videoElements.get(conn.peer);
-                        if (videoInfo && videoInfo.nameSpan) {
-                            videoInfo.nameSpan.innerText = data.name;
-                        }
-                    } else if (data.type === 'chat') {
-                        appendChatMessage(data.name, data.text);
-                        showToast(`💬 ${data.name}: ${data.text.substring(0, 40)}`);
-                    } else if (data.type === 'ping') {
-                        // respon
-                        const reply = peer.connect(conn.peer);
-                        reply.on('open', () => {
-                            reply.send({ type: 'pong', name: currentUsername });
-                            reply.close();
-                        });
-                    }
-                });
-            });
-            
-                // Coba cari peer lain di room yang sama (panggil balik)
-    // Kita akan coba call semua peer yang mungkin sudah ada
-    setTimeout(() => {
-        if (peer && peer.listAllPeers) {
-            peer.listAllPeers((peers) => {
-                peers.forEach(pid => {
-                    if (pid !== peer.id && !connections.has(pid) && pid.includes(roomCode.split('-')[0])) {
-                        const call = peer.call(pid, myStream);
-                        call.on('stream', (stream) => {
-                            addRemoteVideo(stream, pid);
-                        });
-                        connections.set(pid, call);
-                        showToast(`📞 Menghubungkan dengan peserta lain`);
-                    }
-                });
-            });
+    // Buat ruang baru (random ID)
+    createBtn.onclick = async () => {
+        let username = usernameInput.value.trim();
+        if (!username) {
+            username = "User_" + Math.floor(Math.random() * 1000);
+            usernameInput.value = username;
         }
-    }, 1000);
-    
-    // Simpan sendChat
-    window.sendChatMessage = (text) => {
-        if (!text.trim()) return;
-        appendChatMessage(currentUsername, text, true);
-        for (let [peerId] of connections.entries()) {
-            const dataConn = peer.connect(peerId);
-            dataConn.on('open', () => {
-                dataConn.send({ type: 'chat', name: currentUsername, text: text });
-                dataConn.close();
-            });
+        const newRoom = "room_" + Math.random().toString(36).substring(2, 10);
+        roomInput.value = newRoom;
+        await startMeeting(newRoom, username);
+    };
+
+    // Gabung ke ruang yang sudah ada
+    joinBtn.onclick = async () => {
+        let username = usernameInput.value.trim();
+        let roomCode = roomInput.value.trim();
+        if (!username) {
+            username = "User_" + Math.floor(Math.random() * 1000);
+            usernameInput.value = username;
+        }
+        if (!roomCode) {
+            showToast("Masukkan kode ruang");
+            return;
+        }
+        roomCode = roomCode.replace(/\s/g, '-').replace(/[^a-z0-9\-_]/gi, '');
+        await startMeeting(roomCode, username);
+    };
+
+    // Toggle microphone
+    micBtn.onclick = () => {
+        if (myStream) {
+            const audioTrack = myStream.getAudioTracks()[0];
+            if (audioTrack) {
+                isMicMuted = !isMicMuted;
+                audioTrack.enabled = !isMicMuted;
+                micBtn.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+                
+                const localCard = document.getElementById('local-video-card');
+                if (localCard) {
+                    let badge = localCard.querySelector('.mic-badge');
+                    if (badge) badge.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+                }
+                showToast(isMicMuted ? "Mic mati" : "Mic hidup");
+            }
+        } else {
+            showToast("Belum masuk ruangan");
         }
     };
-    
-} catch (err) {
-    console.error(err);
-    showToast("Gagal: " + err.message);
-    updateStatus("Gagal terhubung", null);
-    if (myStream) {
-        myStream.getTracks().forEach(t => t.stop());
-        myStream = null;
-    }
-}
-}
 
-// Buat ruang
-createBtn.onclick = async () => {
-    let username = usernameInput.value.trim();
-    if (!username) {
-        username = "User_" + Math.floor(Math.random() * 1000);
-        usernameInput.value = username;
-    }
-    const newRoom = "zooly_" + Math.random().toString(36).substring(2, 10);
-    roomInput.value = newRoom;
-    await startMeeting(newRoom, username);
-};
+    // Toggle video (kamera on/off)
+    videoBtn.onclick = () => {
+        if (myStream) {
+            const videoTrack = myStream.getVideoTracks()[0];
+            if (videoTrack) {
+                isVideoOff = !isVideoOff;
+                videoTrack.enabled = !isVideoOff;
+                videoBtn.innerHTML = isVideoOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
+                showToast(isVideoOff ? "Kamera OFF" : "Kamera ON");
+            }
+        } else {
+            showToast("Belum masuk ruangan");
+        }
+    };
 
-// Gabung ruang
-joinBtn.onclick = async () => {
-    let username = usernameInput.value.trim();
-    let roomCode = roomInput.value.trim();
-    if (!username) {
-        username = "User_" + Math.floor(Math.random() * 1000);
-        usernameInput.value = username;
-    }
-    if (!roomCode) {
-        showToast("Masukkan kode ruang");
-        return;
-    }
-    roomCode = roomCode.replace(/\s/g, '-').replace(/[^a-z0-9\-_]/gi, '');
-    await startMeeting(roomCode, username);
-};
-
-// Mic toggle
-micBtn.onclick = () => {
-    if (myStream) {
-        const audioTrack = myStream.getAudioTracks()[0];
-        if (audioTrack) {
-            isMicMuted = !isMicMuted;
-            audioTrack.enabled = !isMicMuted;
-            micBtn.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+    // Ganti kamera depan/belakang
+    cameraBtn.onclick = async () => {
+        if (myStream) {
+            const oldVideo = myStream.getVideoTracks()[0];
+            const oldAudio = myStream.getAudioTracks()[0];
+            const oldAudioEnabled = oldAudio ? oldAudio.enabled : true;
             
-            const localCard = document.getElementById('local-video-card');
-            if (localCard) {
-                let badge = localCard.querySelector('.mic-badge');
-                if (badge) badge.innerHTML = isMicMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
-            }
-            showToast(isMicMuted ? "Mic mati" : "Mic hidup");
-        }
-    } else {
-        showToast("Belum masuk ruangan");
-    }
-};
-
-// Video toggle
-videoBtn.onclick = () => {
-    if (myStream) {
-        const videoTrack = myStream.getVideoTracks()[0];
-        if (videoTrack) {
-            isVideoOff = !isVideoOff;
-            videoTrack.enabled = !isVideoOff;
-            videoBtn.innerHTML = isVideoOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
-            showToast(isVideoOff ? "Kamera OFF" : "Kamera ON");
-        }
-    } else {
-        showToast("Belum masuk ruangan");
-    }
-};
-
-// Ganti kamera (depan/belakang)
-cameraBtn.onclick = async () => {
-    if (myStream) {
-        const oldVideo = myStream.getVideoTracks()[0];
-        const oldAudio = myStream.getAudioTracks()[0];
-        const oldAudioEnabled = oldAudio ? oldAudio.enabled : true;
-        
-        if (oldVideo) oldVideo.stop();
-        isFrontCamera = !isFrontCamera;
-        
-        try {
-            const newStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: isFrontCamera ? "user" : "environment" },
-                audio: oldAudio ? { echoCancellation: true, noiseSuppression: true } : false
-            });
-            const newVideo = newStream.getVideoTracks()[0];
-            myStream.removeTrack(oldVideo);
-            myStream.addTrack(newVideo);
-            if (oldAudio && !myStream.getAudioTracks().length) {
-                myStream.addTrack(oldAudio);
-                oldAudio.enabled = oldAudioEnabled;
-            }
-            if (localVideoElement) localVideoElement.srcObject = myStream;
-            showToast(isFrontCamera ? "📱 Kamera depan" : "📷 Kamera belakang");
-        } catch(e) {
-            console.error("Gagal ganti kamera:", e);
-            showToast("Gagal ganti kamera");
+            if (oldVideo) oldVideo.stop();
             isFrontCamera = !isFrontCamera;
+            
+            try {
+                const newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: isFrontCamera ? "user" : "environment" },
+                    audio: oldAudio ? { echoCancellation: true, noiseSuppression: true } : false
+                });
+                const newVideo = newStream.getVideoTracks()[0];
+                myStream.removeTrack(oldVideo);
+                myStream.addTrack(newVideo);
+                if (oldAudio && !myStream.getAudioTracks().length) {
+                    myStream.addTrack(oldAudio);
+                    oldAudio.enabled = oldAudioEnabled;
+                }
+                if (localVideoElement) localVideoElement.srcObject = myStream;
+                
+                // Update tracks di semua peer connection
+                for (let [peerId, pc] of peerConnections.entries()) {
+                    try {
+                        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+                        if (sender) sender.replaceTrack(newVideo);
+                    } catch(e) {}
+                }
+                showToast(isFrontCamera ? "Kamera depan" : "Kamera belakang");
+            } catch(e) {
+                console.error("Gagal ganti kamera:", e);
+                showToast("Gagal ganti kamera");
+                isFrontCamera = !isFrontCamera;
+            }
+        } else {
+            showToast("Belum masuk ruangan");
         }
-    } else {
-        showToast("Belum masuk ruangan");
-    }
-};
+    };
 
-// Buka/tutup chat panel
-chatBtn.onclick = () => {
-    chatPanel.classList.toggle('open');
-};
+    // Buka/tutup chat panel
+    chatBtn.onclick = () => {
+        chatPanel.classList.toggle('open');
+    };
 
-// Hangup / tinggalkan ruangan
-hangupBtn.onclick = () => {
-    endMeeting();
-};
+    // Tinggalkan ruangan
+    hangupBtn.onclick = () => {
+        endMeeting();
+    };
 
-// Kirim pesan chat
-sendChatBtn.onclick = () => {
-    if (window.sendChatMessage && chatInput.value.trim()) {
-        window.sendChatMessage(chatInput.value.trim());
-        chatInput.value = '';
-    } else if (!peer) {
-        showToast("Belum masuk ruangan");
-    } else if (!chatInput.value.trim()) {
-        showToast("Tulis pesan dulu");
-    }
-};
-
-// Enter untuk kirim chat
-chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        sendChatBtn.click();
-    }
-});
-
-// Tutup chat panel jika klik di luar
-document.addEventListener('click', (e) => {
-    if (chatPanel && chatPanel.classList.contains('open')) {
-        if (!chatPanel.contains(e.target) && !chatBtn.contains(e.target)) {
-            chatPanel.classList.remove('open');
+    // Kirim pesan chat
+    sendChatBtn.onclick = () => {
+        if (window.sendChatMessage && chatInput.value.trim()) {
+            window.sendChatMessage(chatInput.value.trim());
+            chatInput.value = '';
+        } else if (!roomRef) {
+            showToast("Belum masuk ruangan");
+        } else if (!chatInput.value.trim()) {
+            showToast("Tulis pesan dulu");
         }
-    }
-});
+    };
 
-// Hilangkan booting setelah 1 detik
-setTimeout(() => {
-    booting.classList.add('hide');
-    setTimeout(() => booting.style.display = 'none', 400);
-}, 1000);
+    // Enter untuk kirim chat
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatBtn.click();
+        }
+    });
 
-// Set default username random
-usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
-roomInput.value = "";
+    // Tutup chat panel jika klik di luar
+    document.addEventListener('click', (e) => {
+        if (chatPanel && chatPanel.classList.contains('open')) {
+            if (!chatPanel.contains(e.target) && !chatBtn.contains(e.target)) {
+                chatPanel.classList.remove('open');
+            }
+        }
+    });
 
-// Cleanup saat halaman ditutup
-window.addEventListener('beforeunload', () => {
-    if (peer) {
-        peer.destroy();
-    }
-    if (myStream) {
-        myStream.getTracks().forEach(track => track.stop());
-    }
-});
+    // Hilangkan booting setelah 1 detik
+    setTimeout(() => {
+        booting.classList.add('hide');
+        setTimeout(() => booting.style.display = 'none', 400);
+    }, 1000);
 
-// Handle koneksi internet (online/offline)
-window.addEventListener('online', () => {
-    showToast("Koneksi kembali");
-    if (!peer && currentRoomId) {
-        showToast("Silakan buat/gabung ulang ruangan");
-    }
-});
+    // Set default username random
+    usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
+    roomInput.value = "";
 
-window.addEventListener('offline', () => {
-    showToast("Koneksi terputus");
-    updateStatus("Koneksi putus", currentRoomId);
-});
+    // Cleanup saat halaman ditutup
+    window.addEventListener('beforeunload', () => {
+        if (roomRef && myUserId) {
+            roomRef.child(`users/${myUserId}`).remove();
+        }
+        if (myStream) {
+            myStream.getTracks().forEach(track => track.stop());
+        }
+    });
 
-console.log('ZOoLY siap digunakan!');
+    // Handle koneksi internet
+    window.addEventListener('online', () => {
+        showToast("Koneksi kembali");
+        if (!roomRef && currentRoomId) {
+            showToast("Silakan buat/gabung ulang ruangan");
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        showToast("Koneksi terputus");
+        updateStatus("Koneksi putus", currentRoomId);
+    });
+
+    console.log('ZOoLY siap digunakan! - Firebase signaling, WebRTC video call');
 </script>
 </body>
 </html>
