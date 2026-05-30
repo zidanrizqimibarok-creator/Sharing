@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>VoxMeet - Video Call</title>
+    <title>Voxi - Video Call</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -23,34 +23,64 @@
             position: fixed;
         }
 
-        /* BOOTING */
+        /* BOOTING ELEGAN */
         .booting {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #0a84ff, #5e5ce0, #30b0c0);
+            background: #000;
             z-index: 200;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            transform: translateY(0);
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+            opacity: 1;
+            visibility: visible;
         }
-        .booting.hide { transform: translateY(-100%); pointer-events: none; }
-        .booting-content { text-align: center; animation: floatUp 0.8s ease; }
-        @keyframes floatUp {
-            0% { opacity: 0; transform: translateY(30px); }
-            100% { opacity: 1; transform: translateY(0); }
+        .booting.hide {
+            opacity: 0;
+            visibility: hidden;
         }
-        .booting-icon { font-size: 90px; margin-bottom: 20px; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.3)); animation: pulse 1s ease infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .booting-title { font-size: 52px; font-weight: 800; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .booting-sub { font-size: 14px; opacity: 0; animation: fadeIn 0.5s ease forwards; animation-delay: 1s; margin-top: 12px; }
-        @keyframes fadeIn { to { opacity: 1; } }
+        .booting-content {
+            text-align: center;
+        }
+        .booting-icon {
+            font-size: 70px;
+            margin-bottom: 20px;
+            animation: gentlePulse 1.5s ease infinite;
+        }
+        @keyframes gentlePulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        .booting-title {
+            font-size: 38px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff, #8e8e93);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .booting-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #0a84ff;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: dotBlink 1.4s ease infinite;
+        }
+        .booting-dot:nth-child(2) { animation-delay: 0.2s; }
+        .booting-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotBlink {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
 
-        /* LOGO DI HOME SCREEN */
+        /* LOGO */
         .home-logo {
             position: fixed;
             top: 50%;
@@ -59,11 +89,11 @@
             text-align: center;
             z-index: 5;
             pointer-events: none;
-            opacity: 0.15;
+            opacity: 0.12;
             transition: opacity 0.3s;
         }
-        .home-logo .logo-icon { font-size: 100px; margin-bottom: 10px; }
-        .home-logo .logo-text { font-size: 48px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #0a84ff, #5e5ce0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .home-logo .logo-icon { font-size: 90px; margin-bottom: 10px; }
+        .home-logo .logo-text { font-size: 44px; font-weight: 700; letter-spacing: -1px; }
 
         /* JOIN SHEET */
         .join-sheet {
@@ -112,6 +142,7 @@
         .btn-primary { background: #0a84ff; color: white; }
         .btn-secondary { background: rgba(120,120,128,0.4); color: white; }
         .btn-random { background: #34c759; color: white; }
+        .btn-loading { opacity: 0.6; pointer-events: none; }
 
         /* STATUS BAR */
         .status-bar {
@@ -134,7 +165,6 @@
         }
         .status-bar.show { opacity: 1; pointer-events: auto; }
         .status-badge { background: #0a84ff; border-radius: 30px; padding: 4px 12px; font-size: 11px; }
-        .admin-badge { background: #ff9f0a; margin-left: 8px; }
 
         /* VIDEO GRID */
         .video-grid {
@@ -142,7 +172,7 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 12px;
             padding: 16px;
-            height: 100vh;
+            height: calc(100vh - 160px);
             overflow-y: auto;
             padding-top: 80px;
             padding-bottom: 90px;
@@ -169,9 +199,6 @@
             font-size: 12px;
             font-weight: 500;
             z-index: 5;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         .admin-tag {
             background: #ff9f0a;
@@ -179,6 +206,7 @@
             border-radius: 20px;
             font-size: 10px;
             font-weight: 600;
+            margin-left: 6px;
         }
         .mic-badge {
             position: absolute;
@@ -202,7 +230,6 @@
             font-size: 12px;
             cursor: pointer;
             z-index: 6;
-            backdrop-filter: blur(10px);
         }
 
         /* TOOLBAR */
@@ -233,7 +260,7 @@
         }
         .tool-btn:active { transform: scale(0.92); background: #0a84ff; }
         .tool-hangup { background: #ff3b30; }
-        .tool-muteall { background: #ff9f0a; }
+        .tool-share { background: #34c759; }
 
         /* CHAT PANEL */
         .chat-panel {
@@ -299,28 +326,7 @@
             cursor: pointer;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 100px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 40px;
-            padding: 12px 20px;
-            text-align: center;
-            font-size: 14px;
-            z-index: 150;
-            transition: 0.2s;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .empty-state {
-            text-align: center;
-            color: #666;
-            padding: 40px;
-            font-size: 14px;
-        }
+        /* PARTICIPANT POPUP */
         .participant-popup {
             position: fixed;
             top: 50%;
@@ -362,6 +368,51 @@
             transition: 0.2s;
         }
         .overlay.open { opacity: 1; visibility: visible; }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 14px;
+            z-index: 150;
+            transition: 0.2s;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 14px;
+        }
+        .voxi-credit {
+            position: fixed;
+            bottom: 85px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+            z-index: 99;
+            pointer-events: none;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -369,23 +420,31 @@
 <div id="booting" class="booting">
     <div class="booting-content">
         <div class="booting-icon">🎥</div>
-        <div class="booting-title">VoxMeet</div>
-        <div class="booting-sub">connecting to server...</div>
+        <div class="booting-title">voxi</div>
+        <div style="margin-top: 16px;">
+            <span class="booting-dot"></span>
+            <span class="booting-dot"></span>
+            <span class="booting-dot"></span>
+        </div>
     </div>
 </div>
 
 <div id="homeLogo" class="home-logo">
     <div class="logo-icon">🎥</div>
-    <div class="logo-text">VoxMeet</div>
+    <div class="logo-text">voxi</div>
 </div>
 
 <div id="joinSheet" class="join-sheet">
-    <div class="sheet-title">VoxMeet</div>
-    <div class="sheet-sub">Video call · Tanpa login</div>
+    <div class="sheet-title">voxi</div>
+    <div class="sheet-sub">video call · tanpa login</div>
     <input type="text" id="usernameInput" class="input-field" placeholder="Nama kamu" autocomplete="off">
+    <div class="mode-toggle" style="display:flex; gap:12px; margin-bottom:20px;">
+        <button id="publicModeBtn" style="flex:1; padding:10px; border-radius:44px; border:none; background:#0a84ff; color:white; font-weight:500;">🌍 Public</button>
+        <button id="privateModeBtn" style="flex:1; padding:10px; border-radius:44px; border:none; background:rgba(120,120,128,0.4); color:white; font-weight:500;">🔒 Private</button>
+    </div>
     <input type="text" id="roomInput" class="input-field" placeholder="Kode ruang" autocomplete="off">
     <div class="btn-group">
-        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Ruang</button>
+        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat</button>
         <button id="randomBtn" class="btn btn-random"><i class="fas fa-dice"></i> Random</button>
         <button id="joinBtn" class="btn btn-secondary"><i class="fas fa-sign-in-alt"></i> Gabung</button>
     </div>
@@ -399,11 +458,13 @@
 <div id="videoGrid" class="video-grid">
     <div class="empty-state">🎥 Belum ada video<br>Buat atau gabung ruang dulu</div>
 </div>
+<div class="voxi-credit">voxi</div>
 
 <div id="toolbar" class="toolbar" style="display: none;">
     <button id="micBtn" class="tool-btn"><i class="fas fa-microphone"></i></button>
     <button id="videoBtn" class="tool-btn"><i class="fas fa-video"></i></button>
     <button id="cameraBtn" class="tool-btn"><i class="fas fa-sync-alt"></i></button>
+    <button id="shareBtn" class="tool-btn tool-share"><i class="fas fa-desktop"></i></button>
     <button id="participantBtn" class="tool-btn"><i class="fas fa-users"></i></button>
     <button id="chatBtn" class="tool-btn"><i class="fas fa-comment"></i></button>
     <button id="hangupBtn" class="tool-btn tool-hangup"><i class="fas fa-phone-slash"></i></button>
@@ -429,8 +490,7 @@
     </div>
     <div id="participantList" style="max-height: 400px; overflow-y: auto;"></div>
     <div id="adminActions" style="padding: 12px; border-top: 0.5px solid rgba(255,255,255,0.1); display: none;">
-        <button id="muteAllBtn" style="width:100%; background:#ff9f0a; border:none; border-radius:30px; padding:12px; color:white; font-weight:600; margin-bottom:8px;"><i class="fas fa-microphone-slash"></i> Mute Semua</button>
-        <button id="unmuteAllBtn" style="width:100%; background:#0a84ff; border:none; border-radius:30px; padding:12px; color:white; font-weight:600;"><i class="fas fa-microphone"></i> Unmute Semua</button>
+        <button id="muteAllBtn" style="width:100%; background:#ff9f0a; border:none; border-radius:30px; padding:12px; color:white; font-weight:600;"><i class="fas fa-microphone-slash"></i> Mute Semua</button>
     </div>
 </div>
 
@@ -467,9 +527,12 @@
     const createBtn = document.getElementById('createBtn');
     const joinBtn = document.getElementById('joinBtn');
     const randomBtn = document.getElementById('randomBtn');
+    const publicModeBtn = document.getElementById('publicModeBtn');
+    const privateModeBtn = document.getElementById('privateModeBtn');
     const micBtn = document.getElementById('micBtn');
     const videoBtn = document.getElementById('videoBtn');
     const cameraBtn = document.getElementById('cameraBtn');
+    const shareBtn = document.getElementById('shareBtn');
     const participantBtn = document.getElementById('participantBtn');
     const chatBtn = document.getElementById('chatBtn');
     const hangupBtn = document.getElementById('hangupBtn');
@@ -484,12 +547,13 @@
     const participantList = document.getElementById('participantList');
     const adminActions = document.getElementById('adminActions');
     const muteAllBtn = document.getElementById('muteAllBtn');
-    const unmuteAllBtn = document.getElementById('unmuteAllBtn');
     const toastMsg = document.getElementById('toastMsg');
 
-    // State
+        // State
     let peerConnections = new Map();
     let myStream = null;
+    let screenStream = null;
+    let isSharing = false;
     let currentRoomId = null;
     let currentUsername = "";
     let myUserId = null;
@@ -500,11 +564,13 @@
     let localVideoElement = null;
     let isAdmin = false;
     let roomUsers = new Map();
+    let isPublicMode = true;
 
     const configuration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
         ]
     };
 
@@ -515,10 +581,10 @@
     }
 
     function playSoundJoin() {
-        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e) {}
+        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'); audio.volume = 0.15; audio.play().catch(()=>{}); } catch(e) {}
     }
     function playSoundLeave() {
-        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e) {}
+        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3'); audio.volume = 0.15; audio.play().catch(()=>{}); } catch(e) {}
     }
 
     function updateStatus(status, roomName = null) {
@@ -531,10 +597,13 @@
         statusBar.classList.add('show');
     }
 
-        function addLocalVideo(stream, username) {
+    function addLocalVideo(stream, username) {
         const empty = videoGrid.querySelector('.empty-state');
         if (empty) empty.remove();
         homeLogo.style.opacity = '0';
+        
+        let existing = document.getElementById('local-video-card');
+        if (existing) existing.remove();
         
         const container = document.createElement('div');
         container.className = 'video-card local';
@@ -546,7 +615,7 @@
         video.muted = true;
         const nameSpan = document.createElement('div');
         nameSpan.className = 'video-name';
-        nameSpan.innerHTML = username + (isAdmin ? ' <span class="admin-tag">👑 Admin</span>' : '');
+        nameSpan.innerHTML = username + (isAdmin ? ' <span class="admin-tag">Admin</span>' : '');
         const micSpan = document.createElement('div');
         micSpan.className = 'mic-badge';
         micSpan.innerHTML = '<i class="fas fa-microphone"></i>';
@@ -573,10 +642,9 @@
         video.playsInline = true;
         const nameSpan = document.createElement('div');
         nameSpan.className = 'video-name';
-        nameSpan.innerHTML = userName + (isUserAdmin ? ' <span class="admin-tag">👑 Admin</span>' : '');
+        nameSpan.innerHTML = userName + (isUserAdmin ? ' <span class="admin-tag">Admin</span>' : '');
         
-        // Tambahin tombol kick untuk admin
-        if (isAdmin && peerId !== myUserId) {
+        if (isAdmin && peerId !== myUserId && !isUserAdmin) {
             const kickBtn = document.createElement('button');
             kickBtn.className = 'kick-btn';
             kickBtn.innerHTML = '<i class="fas fa-user-slash"></i>';
@@ -600,7 +668,7 @@
             div.className = 'empty-state';
             div.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
             videoGrid.appendChild(div);
-            homeLogo.style.opacity = '0.15';
+            homeLogo.style.opacity = '0.12';
         }
     }
 
@@ -644,14 +712,11 @@
                 <div class="participant-item">
                     <span>
                         <i class="fas fa-user-circle"></i> <strong>${escapeHtml(data.username)}</strong>
-                        ${isUserAdmin ? ' <span style="background:#ff9f0a; padding:2px 8px; border-radius:20px; font-size:10px;">👑 Admin</span>' : ''}
+                        ${isUserAdmin ? ' <span style="background:#ff9f0a; padding:2px 8px; border-radius:20px; font-size:10px;">Admin</span>' : ''}
                         ${isCurrentUser ? ' <span style="color:#8e8e93;">(Anda)</span>' : ''}
                     </span>
                     ${isAdmin && !isCurrentUser && !isUserAdmin ? `
-                        <div style="display:flex; gap:8px;">
-                            <button onclick="muteUser('${userId}')" style="background:#ff9f0a; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;"><i class="fas fa-microphone-slash"></i></button>
-                            <button onclick="kickUser('${userId}', '${escapeHtml(data.username)}')" style="background:#ff3b30; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;"><i class="fas fa-user-slash"></i></button>
-                        </div>
+                        <button onclick="window.muteUser('${userId}')" style="background:#ff9f0a; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;"><i class="fas fa-microphone-slash"></i></button>
                     ` : ''}
                 </div>
             `;
@@ -659,7 +724,6 @@
         
         participantList.innerHTML = html || '<div style="padding:16px; text-align:center; color:#8e8e93;">Tidak ada peserta lain</div>';
         
-        // Tampilkan action admin jika admin
         if (isAdmin && adminActions) {
             adminActions.style.display = 'block';
         } else if (adminActions) {
@@ -704,14 +768,45 @@
         showToast("Semua peserta dimute");
     }
 
-    function unmuteAllUsers() {
-        if (!isAdmin) return;
-        for (let [userId] of roomUsers.entries()) {
-            if (userId !== myUserId) {
-                database.ref(`mutes/${currentRoomId}/${userId}`).remove();
+    async function toggleScreenShare() {
+        if (!isSharing) {
+            try {
+                screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const videoTrack = screenStream.getVideoTracks()[0];
+                videoTrack.onended = () => stopScreenShare();
+                
+                for (let [peerId, pc] of peerConnections.entries()) {
+                    const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+                    if (sender) sender.replaceTrack(videoTrack);
+                }
+                if (localVideoElement) localVideoElement.srcObject = screenStream;
+                isSharing = true;
+                shareBtn.style.background = '#0a84ff';
+                showToast("Berbagi layar...");
+            } catch(e) {
+                showToast("Gagal berbagi layar");
             }
+        } else {
+            stopScreenShare();
         }
-        showToast("Semua peserta diunmute");
+    }
+    
+    async function stopScreenShare() {
+        if (screenStream) {
+            screenStream.getTracks().forEach(t => t.stop());
+            screenStream = null;
+        }
+        if (myStream) {
+            const videoTrack = myStream.getVideoTracks()[0];
+            for (let [peerId, pc] of peerConnections.entries()) {
+                const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+                if (sender) sender.replaceTrack(videoTrack);
+            }
+            if (localVideoElement) localVideoElement.srcObject = myStream;
+        }
+        isSharing = false;
+        shareBtn.style.background = '#34c759';
+        showToast("Berhenti berbagi layar");
     }
 
     function escapeHtml(str) {
@@ -742,6 +837,29 @@
         return pc;
     }
 
+    async function findExistingRoom() {
+        showToast("🔍 Mencari ruang yang tersedia...");
+        randomBtn.innerHTML = '<span class="loading-spinner"></span> Mencari';
+        randomBtn.classList.add('btn-loading');
+        
+        try {
+            const roomsRef = database.ref('rooms');
+            const snapshot = await roomsRef.once('value');
+            const rooms = [];
+            snapshot.forEach(child => {
+                rooms.push(child.key);
+            });
+            const publicRooms = rooms.filter(r => r.startsWith('pub_') || (!r.startsWith('room_') && r.length > 0));
+            if (publicRooms.length > 0) {
+                return publicRooms[Math.floor(Math.random() * publicRooms.length)];
+            }
+            return null;
+        } finally {
+            randomBtn.innerHTML = '<i class="fas fa-dice"></i> Random';
+            randomBtn.classList.remove('btn-loading');
+        }
+    }
+
     async function startMeeting(roomCode, username) {
         if (roomRef) await endMeeting();
         
@@ -757,7 +875,6 @@
             
             roomRef = database.ref(`rooms/${roomCode}`);
             
-            // Cek apakah user pertama (jadi admin)
             const usersSnap = await roomRef.child('users').once('value');
             const isFirstUser = !usersSnap.exists();
             isAdmin = isFirstUser;
@@ -907,6 +1024,13 @@
         updateStatus("Meninggalkan...");
         playSoundLeave();
         
+        if (screenStream) {
+            screenStream.getTracks().forEach(t => t.stop());
+            screenStream = null;
+        }
+        isSharing = false;
+        if (shareBtn) shareBtn.style.background = '#34c759';
+        
         for (let [peerId, pc] of peerConnections.entries()) {
             try { pc.close(); } catch(e) {}
         }
@@ -920,7 +1044,7 @@
             roomRef = null;
         }
         
-        if (myStream) {
+                if (myStream) {
             myStream.getTracks().forEach(track => { try { track.stop(); } catch(e) {} });
             myStream = null;
         }
@@ -931,7 +1055,7 @@
         empty.className = 'empty-state';
         empty.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
         videoGrid.appendChild(empty);
-        homeLogo.style.opacity = '0.15';
+        homeLogo.style.opacity = '0.12';
         
         toolbar.style.display = 'none';
         joinSheet.classList.remove('hide');
@@ -946,6 +1070,8 @@
         isAdmin = false;
         isMicMuted = false;
         isVideoOff = false;
+        isSharing = false;
+        if (shareBtn) shareBtn.style.background = '#34c759';
         localVideoElement = null;
         
         if (micBtn) micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
@@ -956,33 +1082,79 @@
 
     // ==================== EVENT HANDLERS ====================
     
-    // Hilangkan booting
+    // Hilangkan booting dengan animasi elegan
     setTimeout(() => {
         booting.classList.add('hide');
-        setTimeout(() => booting.style.display = 'none', 500);
-    }, 1500);
+        setTimeout(() => booting.style.display = 'none', 800);
+    }, 1800);
+    
+    // Mode Public/Private
+    publicModeBtn.onclick = () => {
+        isPublicMode = true;
+        publicModeBtn.style.background = '#0a84ff';
+        publicModeBtn.style.color = 'white';
+        privateModeBtn.style.background = 'rgba(120,120,128,0.4)';
+        privateModeBtn.style.color = 'white';
+    };
+    
+    privateModeBtn.onclick = () => {
+        isPublicMode = false;
+        privateModeBtn.style.background = '#0a84ff';
+        privateModeBtn.style.color = 'white';
+        publicModeBtn.style.background = 'rgba(120,120,128,0.4)';
+        publicModeBtn.style.color = 'white';
+    };
     
     createBtn.onclick = async () => {
         let username = usernameInput.value.trim();
-        if (!username) { username = "User_" + Math.floor(Math.random() * 1000); usernameInput.value = username; }
-        const newRoom = "room_" + Math.random().toString(36).substring(2, 8);
+        if (!username) { 
+            username = "User_" + Math.floor(Math.random() * 1000); 
+            usernameInput.value = username; 
+        }
+        const prefix = isPublicMode ? "pub_" : "priv_";
+        const newRoom = prefix + Math.random().toString(36).substring(2, 8);
         roomInput.value = newRoom;
         await startMeeting(newRoom, username);
     };
     
     randomBtn.onclick = async () => {
         let username = usernameInput.value.trim();
-        if (!username) { username = "User_" + Math.floor(Math.random() * 1000); usernameInput.value = username; }
-        const randomRoom = "meet_" + Math.random().toString(36).substring(2, 8);
-        roomInput.value = randomRoom;
-        await startMeeting(randomRoom, username);
+        if (!username) { 
+            username = "User_" + Math.floor(Math.random() * 1000); 
+            usernameInput.value = username; 
+        }
+        
+        randomBtn.innerHTML = '<span class="loading-spinner"></span>';
+        randomBtn.disabled = true;
+        
+        try {
+            const existingRoom = await findExistingRoom();
+            if (existingRoom) {
+                roomInput.value = existingRoom;
+                await startMeeting(existingRoom, username);
+            } else {
+                showToast("Tidak ada ruang publik, buat ruang baru dulu");
+                const newRoom = "pub_" + Math.random().toString(36).substring(2, 8);
+                roomInput.value = newRoom;
+                await startMeeting(newRoom, username);
+            }
+        } finally {
+            randomBtn.innerHTML = '<i class="fas fa-dice"></i> Random';
+            randomBtn.disabled = false;
+        }
     };
     
     joinBtn.onclick = async () => {
         let username = usernameInput.value.trim();
         let roomCode = roomInput.value.trim();
-        if (!username) { username = "User_" + Math.floor(Math.random() * 1000); usernameInput.value = username; }
-        if (!roomCode) { showToast("Masukkan kode ruang"); return; }
+        if (!username) { 
+            username = "User_" + Math.floor(Math.random() * 1000); 
+            usernameInput.value = username; 
+        }
+        if (!roomCode) { 
+            showToast("Masukkan kode ruang"); 
+            return; 
+        }
         roomCode = roomCode.replace(/\s/g, '-').replace(/[^a-z0-9\-_]/gi, '');
         await startMeeting(roomCode, username);
     };
@@ -1001,10 +1173,12 @@
                 }
                 showToast(isMicMuted ? "Mic mati" : "Mic hidup");
             }
+        } else {
+            showToast("Belum masuk ruangan");
         }
     };
     
-        videoBtn.onclick = () => {
+    videoBtn.onclick = () => {
         if (myStream) {
             const videoTrack = myStream.getVideoTracks()[0];
             if (videoTrack) {
@@ -1059,6 +1233,14 @@
         }
     };
     
+    shareBtn.onclick = () => {
+        if (!roomRef) {
+            showToast("Belum masuk ruangan");
+            return;
+        }
+        toggleScreenShare();
+    };
+    
     participantBtn.onclick = () => {
         if (!roomRef) {
             showToast("Belum masuk ruangan");
@@ -1111,7 +1293,6 @@
         }
     });
     
-    // Admin actions
     if (muteAllBtn) {
         muteAllBtn.onclick = () => {
             if (!isAdmin) {
@@ -1122,32 +1303,9 @@
         };
     }
     
-    if (unmuteAllBtn) {
-        unmuteAllBtn.onclick = () => {
-            if (!isAdmin) {
-                showToast("Hanya admin yang bisa unmute semua");
-                return;
-            }
-            unmuteAllUsers();
-        };
-    }
-    
     // Expose functions ke window untuk dipanggil dari HTML
-    window.kickUser = (userId, username) => {
-        if (!isAdmin) {
-            showToast("Hanya admin yang bisa kick");
-            return;
-        }
-        kickUser(userId, username);
-    };
-    
-    window.muteUser = (userId) => {
-        if (!isAdmin) {
-            showToast("Hanya admin yang bisa mute");
-            return;
-        }
-        muteUser(userId);
-    };
+    window.kickUser = kickUser;
+    window.muteUser = muteUser;
     
     // Set default values
     usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
@@ -1160,6 +1318,9 @@
         }
         if (myStream) {
             myStream.getTracks().forEach(track => track.stop());
+        }
+        if (screenStream) {
+            screenStream.getTracks().forEach(track => track.stop());
         }
     });
     
@@ -1175,8 +1336,8 @@
         updateStatus("Koneksi putus", currentRoomId);
     });
     
-    console.log('✨ VoxMeet siap! ✨');
-    console.log('Fitur: Video Call | Chat | Admin bisa kick/mute | Unlimited peserta');
+    console.log('✨ Voxi siap! ✨');
+    console.log('Fitur: Video Call | Screen Share | Chat | Admin Mute All | Kick User | Unlimited Peserta');
 </script>
 </body>
 </html>
