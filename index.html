@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>ZOoLY - Video Call</title>
+    <title>VoxMeet - Video Call</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -14,7 +14,7 @@
         }
 
         body {
-            font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+            font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', system-ui;
             background: #000;
             color: white;
             overflow: hidden;
@@ -23,7 +23,34 @@
             position: fixed;
         }
 
-        /* LOGO */
+        /* BOOTING */
+        .booting {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a84ff, #5e5ce0, #30b0c0);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transform: translateY(0);
+        }
+        .booting.hide { transform: translateY(-100%); pointer-events: none; }
+        .booting-content { text-align: center; animation: floatUp 0.8s ease; }
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .booting-icon { font-size: 90px; margin-bottom: 20px; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.3)); animation: pulse 1s ease infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .booting-title { font-size: 52px; font-weight: 800; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .booting-sub { font-size: 14px; opacity: 0; animation: fadeIn 0.5s ease forwards; animation-delay: 1s; margin-top: 12px; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* LOGO DI HOME SCREEN */
         .home-logo {
             position: fixed;
             top: 50%;
@@ -32,12 +59,11 @@
             text-align: center;
             z-index: 5;
             pointer-events: none;
-            opacity: 0.2;
+            opacity: 0.15;
             transition: opacity 0.3s;
         }
         .home-logo .logo-icon { font-size: 100px; margin-bottom: 10px; }
-        .home-logo .logo-text { font-size: 48px; font-weight: 800; letter-spacing: 2px; background: linear-gradient(135deg, #0a84ff, #5e5ce0); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .home-logo .logo-sub { font-size: 12px; color: #8e8e93; margin-top: 8px; }
+        .home-logo .logo-text { font-size: 48px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #0a84ff, #5e5ce0); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
         /* JOIN SHEET */
         .join-sheet {
@@ -87,26 +113,6 @@
         .btn-secondary { background: rgba(120,120,128,0.4); color: white; }
         .btn-random { background: #34c759; color: white; }
 
-        .mode-toggle {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            background: rgba(120,120,128,0.2);
-            border-radius: 44px;
-            padding: 4px;
-        }
-        .mode-option {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .mode-option.active { background: #0a84ff; color: white; }
-
         /* STATUS BAR */
         .status-bar {
             position: fixed;
@@ -128,7 +134,7 @@
         }
         .status-bar.show { opacity: 1; pointer-events: auto; }
         .status-badge { background: #0a84ff; border-radius: 30px; padding: 4px 12px; font-size: 11px; }
-        .status-online { background: #34c759; }
+        .admin-badge { background: #ff9f0a; margin-left: 8px; }
 
         /* VIDEO GRID */
         .video-grid {
@@ -163,6 +169,16 @@
             font-size: 12px;
             font-weight: 500;
             z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .admin-tag {
+            background: #ff9f0a;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
         }
         .mic-badge {
             position: absolute;
@@ -174,8 +190,22 @@
             font-size: 11px;
             z-index: 5;
         }
+        .kick-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,59,48,0.8);
+            border: none;
+            border-radius: 30px;
+            padding: 6px 10px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 6;
+            backdrop-filter: blur(10px);
+        }
 
-        /* TOOLBAR - TIDAK NABRAK */
+        /* TOOLBAR */
         .toolbar {
             position: fixed;
             bottom: 20px;
@@ -203,56 +233,72 @@
         }
         .tool-btn:active { transform: scale(0.92); background: #0a84ff; }
         .tool-hangup { background: #ff3b30; }
-        .tool-friend { background: #af52de; }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ff3b30;
-            border-radius: 20px;
-            padding: 2px 5px;
-            font-size: 9px;
-            font-weight: bold;
-            min-width: 16px;
-        }
+        .tool-muteall { background: #ff9f0a; }
 
-        /* FRIEND POPUP */
-        .friend-popup {
+        /* CHAT PANEL */
+        .chat-panel {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 85%;
-            max-width: 320px;
-            background: rgba(30,30,35,0.98);
+            bottom: 90px;
+            right: 16px;
+            width: 320px;
+            background: rgba(30,30,35,0.97);
             backdrop-filter: blur(40px);
             border-radius: 28px;
-            z-index: 110;
-            transition: 0.2s;
-            border: 0.5px solid rgba(255,255,255,0.2);
-            opacity: 0;
-            visibility: hidden;
+            z-index: 105;
+            transform: translateX(360px);
+            transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 0.5px solid rgba(255,255,255,0.15);
+            overflow: hidden;
         }
-        .friend-popup.open {
-            opacity: 1;
-            visibility: visible;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        .friend-popup-header {
-            padding: 16px;
-            font-weight: 600;
-            border-bottom: 0.5px solid rgba(255,255,255,0.1);
-            text-align: center;
-        }
-        .friend-request-item {
+        .chat-panel.open { transform: translateX(0); }
+        .chat-header {
             padding: 14px 16px;
+            font-weight: 600;
             border-bottom: 0.5px solid rgba(255,255,255,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
         }
+        .chat-messages {
+            height: 340px;
+            overflow-y: auto;
+            padding: 12px;
+            font-size: 14px;
+        }
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 20px;
+            max-width: 85%;
+            word-break: break-word;
+        }
+        .chat-message.sent { background: #0a84ff; margin-left: auto; }
+        .chat-message.received { background: #2c2c2e; }
+        .chat-sender { font-size: 11px; color: #aaa; margin-bottom: 4px; }
+        .chat-input-area {
+            display: flex;
+            padding: 12px;
+            gap: 8px;
+            border-top: 0.5px solid rgba(255,255,255,0.1);
+        }
+        .chat-input-area input {
+            flex: 1;
+            background: #2c2c2e;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 14px;
+        }
+        .chat-input-area button {
+            background: #0a84ff;
+            border: none;
+            border-radius: 30px;
+            padding: 0 18px;
+            color: white;
+            cursor: pointer;
+        }
+
         .toast {
             position: fixed;
             bottom: 100px;
@@ -275,6 +321,34 @@
             padding: 40px;
             font-size: 14px;
         }
+        .participant-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 85%;
+            max-width: 320px;
+            background: rgba(30,30,35,0.98);
+            backdrop-filter: blur(40px);
+            border-radius: 28px;
+            z-index: 110;
+            transition: 0.2s;
+            border: 0.5px solid rgba(255,255,255,0.2);
+            opacity: 0;
+            visibility: hidden;
+        }
+        .participant-popup.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .participant-item {
+            padding: 14px 16px;
+            border-bottom: 0.5px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .overlay {
             position: fixed;
             top: 0;
@@ -287,31 +361,31 @@
             visibility: hidden;
             transition: 0.2s;
         }
-        .overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
+        .overlay.open { opacity: 1; visibility: visible; }
     </style>
 </head>
 <body>
 
+<div id="booting" class="booting">
+    <div class="booting-content">
+        <div class="booting-icon">🎥</div>
+        <div class="booting-title">VoxMeet</div>
+        <div class="booting-sub">connecting to server...</div>
+    </div>
+</div>
+
 <div id="homeLogo" class="home-logo">
     <div class="logo-icon">🎥</div>
-    <div class="logo-text">ZOoLY</div>
-    <div class="logo-sub">video call · simple · cepat</div>
+    <div class="logo-text">VoxMeet</div>
 </div>
 
 <div id="joinSheet" class="join-sheet">
-    <div class="sheet-title">ZOoLY</div>
-    <div class="sheet-sub">Tanpa login · langsung video call</div>
+    <div class="sheet-title">VoxMeet</div>
+    <div class="sheet-sub">Video call · Tanpa login</div>
     <input type="text" id="usernameInput" class="input-field" placeholder="Nama kamu" autocomplete="off">
-    <div class="mode-toggle">
-        <div class="mode-option active" data-mode="public">🌍 Public</div>
-        <div class="mode-option" data-mode="private">🔒 Private</div>
-    </div>
     <input type="text" id="roomInput" class="input-field" placeholder="Kode ruang" autocomplete="off">
     <div class="btn-group">
-        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat</button>
+        <button id="createBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Ruang</button>
         <button id="randomBtn" class="btn btn-random"><i class="fas fa-dice"></i> Random</button>
         <button id="joinBtn" class="btn btn-secondary"><i class="fas fa-sign-in-alt"></i> Gabung</button>
     </div>
@@ -330,15 +404,34 @@
     <button id="micBtn" class="tool-btn"><i class="fas fa-microphone"></i></button>
     <button id="videoBtn" class="tool-btn"><i class="fas fa-video"></i></button>
     <button id="cameraBtn" class="tool-btn"><i class="fas fa-sync-alt"></i></button>
-    <button id="friendBtn" class="tool-btn tool-friend"><i class="fas fa-user-plus"></i><span id="friendNotif" class="notification-badge" style="display: none;">0</span></button>
+    <button id="participantBtn" class="tool-btn"><i class="fas fa-users"></i></button>
+    <button id="chatBtn" class="tool-btn"><i class="fas fa-comment"></i></button>
     <button id="hangupBtn" class="tool-btn tool-hangup"><i class="fas fa-phone-slash"></i></button>
 </div>
 
+<div id="chatPanel" class="chat-panel">
+    <div class="chat-header">
+        <span><i class="fas fa-comment"></i> Chat</span>
+        <button id="closeChat" style="background:none; border:none; color:white; font-size:20px;">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Tulis pesan...">
+        <button id="sendChatBtn">Kirim</button>
+    </div>
+</div>
+
 <div id="overlay" class="overlay"></div>
-<div id="friendPopup" class="friend-popup">
-    <div class="friend-popup-header"><i class="fas fa-user-friends"></i> Pengguna</div>
-    <div id="friendList" style="max-height: 400px; overflow-y: auto;"></div>
-    <button id="closeFriendPopup" style="width:100%; padding:14px; background:none; border:none; border-top:0.5px solid rgba(255,255,255,0.1); color:#0a84ff; font-weight:600;">Tutup</button>
+<div id="participantPopup" class="participant-popup">
+    <div class="chat-header" style="border-bottom:0.5px solid rgba(255,255,255,0.1);">
+        <span><i class="fas fa-users"></i> Peserta</span>
+        <button id="closeParticipant" style="background:none; border:none; color:white; font-size:20px;">✕</button>
+    </div>
+    <div id="participantList" style="max-height: 400px; overflow-y: auto;"></div>
+    <div id="adminActions" style="padding: 12px; border-top: 0.5px solid rgba(255,255,255,0.1); display: none;">
+        <button id="muteAllBtn" style="width:100%; background:#ff9f0a; border:none; border-radius:30px; padding:12px; color:white; font-weight:600; margin-bottom:8px;"><i class="fas fa-microphone-slash"></i> Mute Semua</button>
+        <button id="unmuteAllBtn" style="width:100%; background:#0a84ff; border:none; border-radius:30px; padding:12px; color:white; font-weight:600;"><i class="fas fa-microphone"></i> Unmute Semua</button>
+    </div>
 </div>
 
 <div id="toastMsg" class="toast"></div>
@@ -347,7 +440,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
 <script>
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyBoS3INezO0UQptcXYNZFbnPbmmf_hU8xc",
         authDomain: "xbook-global26.firebaseapp.com",
@@ -362,6 +454,7 @@
     const database = firebase.database();
 
     // DOM Elements
+    const booting = document.getElementById('booting');
     const homeLogo = document.getElementById('homeLogo');
     const joinSheet = document.getElementById('joinSheet');
     const videoGrid = document.getElementById('videoGrid');
@@ -377,12 +470,21 @@
     const micBtn = document.getElementById('micBtn');
     const videoBtn = document.getElementById('videoBtn');
     const cameraBtn = document.getElementById('cameraBtn');
-    const friendBtn = document.getElementById('friendBtn');
+    const participantBtn = document.getElementById('participantBtn');
+    const chatBtn = document.getElementById('chatBtn');
     const hangupBtn = document.getElementById('hangupBtn');
-    const friendPopup = document.getElementById('friendPopup');
+    const chatPanel = document.getElementById('chatPanel');
+    const closeChat = document.getElementById('closeChat');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
     const overlay = document.getElementById('overlay');
-    const closeFriendPopup = document.getElementById('closeFriendPopup');
-    const friendNotif = document.getElementById('friendNotif');
+    const participantPopup = document.getElementById('participantPopup');
+    const closeParticipant = document.getElementById('closeParticipant');
+    const participantList = document.getElementById('participantList');
+    const adminActions = document.getElementById('adminActions');
+    const muteAllBtn = document.getElementById('muteAllBtn');
+    const unmuteAllBtn = document.getElementById('unmuteAllBtn');
     const toastMsg = document.getElementById('toastMsg');
 
     // State
@@ -396,9 +498,7 @@
     let isVideoOff = false;
     let isFrontCamera = true;
     let localVideoElement = null;
-    let roomMode = "public";
-    let friends = new Set();
-    let pendingRequests = new Map();
+    let isAdmin = false;
     let roomUsers = new Map();
 
     const configuration = {
@@ -414,29 +514,24 @@
         setTimeout(() => toastMsg.style.opacity = '0', 2000);
     }
 
-    function playSound(type) {
-        try {
-            const audio = new Audio(type === 'join' 
-                ? 'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3' 
-                : 'https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3');
-            audio.volume = 0.2;
-            audio.play().catch(() => {});
-        } catch(e) {}
+    function playSoundJoin() {
+        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e) {}
+    }
+    function playSoundLeave() {
+        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e) {}
     }
 
     function updateStatus(status, roomName = null) {
         statusText.innerText = status;
         if (roomName) {
             roomStatus.innerText = roomName.length > 20 ? roomName.slice(0,17)+'...' : roomName;
-            roomStatus.classList.add('status-online');
         } else {
             roomStatus.innerText = '-';
-            roomStatus.classList.remove('status-online');
         }
         statusBar.classList.add('show');
     }
 
-    function addLocalVideo(stream, username) {
+        function addLocalVideo(stream, username) {
         const empty = videoGrid.querySelector('.empty-state');
         if (empty) empty.remove();
         homeLogo.style.opacity = '0';
@@ -451,7 +546,7 @@
         video.muted = true;
         const nameSpan = document.createElement('div');
         nameSpan.className = 'video-name';
-        nameSpan.innerText = username;
+        nameSpan.innerHTML = username + (isAdmin ? ' <span class="admin-tag">👑 Admin</span>' : '');
         const micSpan = document.createElement('div');
         micSpan.className = 'mic-badge';
         micSpan.innerHTML = '<i class="fas fa-microphone"></i>';
@@ -462,7 +557,7 @@
         localVideoElement = video;
     }
 
-    function addRemoteVideo(stream, peerId, userName) {
+    function addRemoteVideo(stream, peerId, userName, isUserAdmin = false) {
         if (document.getElementById(`remote-${peerId}`)) return;
         
         const empty = videoGrid.querySelector('.empty-state');
@@ -478,7 +573,20 @@
         video.playsInline = true;
         const nameSpan = document.createElement('div');
         nameSpan.className = 'video-name';
-        nameSpan.innerText = userName || 'Teman';
+        nameSpan.innerHTML = userName + (isUserAdmin ? ' <span class="admin-tag">👑 Admin</span>' : '');
+        
+        // Tambahin tombol kick untuk admin
+        if (isAdmin && peerId !== myUserId) {
+            const kickBtn = document.createElement('button');
+            kickBtn.className = 'kick-btn';
+            kickBtn.innerHTML = '<i class="fas fa-user-slash"></i>';
+            kickBtn.onclick = (e) => {
+                e.stopPropagation();
+                kickUser(peerId, userName);
+            };
+            container.appendChild(kickBtn);
+        }
+        
         container.appendChild(video);
         container.appendChild(nameSpan);
         videoGrid.appendChild(container);
@@ -492,44 +600,123 @@
             div.className = 'empty-state';
             div.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
             videoGrid.appendChild(div);
-            homeLogo.style.opacity = '0.2';
+            homeLogo.style.opacity = '0.15';
         }
     }
 
-    function updateFriendNotif() {
-        const count = pendingRequests.size;
-        friendNotif.style.display = count > 0 ? 'flex' : 'none';
-        friendNotif.innerText = count;
+    function appendChatMessage(sender, text, isOwn = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-message ${isOwn ? 'sent' : 'received'}`;
+        if (!isOwn) {
+            const senderSpan = document.createElement('div');
+            senderSpan.className = 'chat-sender';
+            senderSpan.innerText = sender;
+            msgDiv.appendChild(senderSpan);
+        }
+        const textSpan = document.createElement('div');
+        textSpan.innerText = text;
+        msgDiv.appendChild(textSpan);
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function sendFriendRequest(targetUserId, targetUsername) {
-        if (friends.has(targetUserId)) {
-            showToast(`Sudah berteman dengan ${targetUsername}`);
+    function sendPublicMessage(text) {
+        if (!text.trim()) return;
+        appendChatMessage(currentUsername, text, true);
+        if (roomRef) {
+            roomRef.child('chat').push({
+                userId: myUserId,
+                username: currentUsername,
+                text: text,
+                timestamp: Date.now()
+            });
+        }
+    }
+
+    function updateParticipantList() {
+        if (!participantList) return;
+        
+        let html = '';
+        for (let [userId, data] of roomUsers.entries()) {
+            const isCurrentUser = userId === myUserId;
+            const isUserAdmin = data.isAdmin;
+            html += `
+                <div class="participant-item">
+                    <span>
+                        <i class="fas fa-user-circle"></i> <strong>${escapeHtml(data.username)}</strong>
+                        ${isUserAdmin ? ' <span style="background:#ff9f0a; padding:2px 8px; border-radius:20px; font-size:10px;">👑 Admin</span>' : ''}
+                        ${isCurrentUser ? ' <span style="color:#8e8e93;">(Anda)</span>' : ''}
+                    </span>
+                    ${isAdmin && !isCurrentUser && !isUserAdmin ? `
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="muteUser('${userId}')" style="background:#ff9f0a; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;"><i class="fas fa-microphone-slash"></i></button>
+                            <button onclick="kickUser('${userId}', '${escapeHtml(data.username)}')" style="background:#ff3b30; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;"><i class="fas fa-user-slash"></i></button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        participantList.innerHTML = html || '<div style="padding:16px; text-align:center; color:#8e8e93;">Tidak ada peserta lain</div>';
+        
+        // Tampilkan action admin jika admin
+        if (isAdmin && adminActions) {
+            adminActions.style.display = 'block';
+        } else if (adminActions) {
+            adminActions.style.display = 'none';
+        }
+    }
+
+    function kickUser(targetUserId, targetUsername) {
+        if (!isAdmin) {
+            showToast("Hanya admin yang bisa kick");
             return;
         }
-        database.ref(`friendRequests/${targetUserId}/${myUserId}`).set({
-            from: myUserId,
-            fromName: currentUsername,
+        database.ref(`kicks/${currentRoomId}/${targetUserId}`).set({
+            kickedBy: myUserId,
             timestamp: Date.now()
         });
-        showToast(`Permintaan dikirim ke ${targetUsername}`);
+        showToast(`${targetUsername} dikick dari ruangan`);
     }
 
-    function acceptFriendRequest(fromId, fromName) {
-        friends.add(fromId);
-        database.ref(`friends/${myUserId}/${fromId}`).set({ username: fromName, timestamp: Date.now() });
-        database.ref(`friends/${fromId}/${myUserId}`).set({ username: currentUsername, timestamp: Date.now() });
-        database.ref(`friendRequests/${myUserId}/${fromId}`).remove();
-        pendingRequests.delete(fromId);
-        updateFriendNotif();
-        showToast(`${fromName} sekarang teman Anda!`);
+    function muteUser(targetUserId) {
+        if (!isAdmin) {
+            showToast("Hanya admin yang bisa mute");
+            return;
+        }
+        database.ref(`mutes/${currentRoomId}/${targetUserId}`).set({
+            mutedBy: myUserId,
+            timestamp: Date.now()
+        });
+        showToast(`User dimute`);
     }
 
-    function rejectFriendRequest(fromId) {
-        database.ref(`friendRequests/${myUserId}/${fromId}`).remove();
-        pendingRequests.delete(fromId);
-        updateFriendNotif();
-        showToast(`Permintaan ditolak`);
+    function muteAllUsers() {
+        if (!isAdmin) return;
+        for (let [userId] of roomUsers.entries()) {
+            if (userId !== myUserId) {
+                database.ref(`mutes/${currentRoomId}/${userId}`).set({
+                    mutedBy: myUserId,
+                    timestamp: Date.now()
+                });
+            }
+        }
+        showToast("Semua peserta dimute");
+    }
+
+    function unmuteAllUsers() {
+        if (!isAdmin) return;
+        for (let [userId] of roomUsers.entries()) {
+            if (userId !== myUserId) {
+                database.ref(`mutes/${currentRoomId}/${userId}`).remove();
+            }
+        }
+        showToast("Semua peserta diunmute");
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, (m) => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
     }
 
     async function createPeerConnection(targetUserId, isInitiator = false) {
@@ -537,7 +724,8 @@
         if (myStream) myStream.getTracks().forEach(track => pc.addTrack(track, myStream));
         
         pc.ontrack = (event) => {
-            addRemoteVideo(event.streams[0], targetUserId, roomUsers.get(targetUserId) || 'Teman');
+            const userData = roomUsers.get(targetUserId);
+            addRemoteVideo(event.streams[0], targetUserId, userData?.username || 'Teman', userData?.isAdmin || false);
         };
         pc.onicecandidate = (event) => {
             if (event.candidate && roomRef) {
@@ -566,40 +754,82 @@
         
         try {
             myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            
+            roomRef = database.ref(`rooms/${roomCode}`);
+            
+            // Cek apakah user pertama (jadi admin)
+            const usersSnap = await roomRef.child('users').once('value');
+            const isFirstUser = !usersSnap.exists();
+            isAdmin = isFirstUser;
+            
+            await roomRef.child(`users/${myUserId}`).set({ 
+                username: username, 
+                timestamp: Date.now(), 
+                isAdmin: isAdmin 
+            });
+            roomRef.child(`users/${myUserId}`).onDisconnect().remove();
+            
             addLocalVideo(myStream, username);
             toolbar.style.display = 'flex';
             joinSheet.classList.add('hide');
             
-            roomRef = database.ref(`rooms/${roomCode}`);
-            await roomRef.child(`users/${myUserId}`).set({ username: username, timestamp: Date.now(), mode: roomMode });
-            roomRef.child(`users/${myUserId}`).onDisconnect().remove();
-            
             updateStatus(`Terhubung ke ${roomCode}`, roomCode);
-            showToast(`✅ Bergabung sebagai ${username}`);
-            playSound('join');
+            showToast(`✅ Bergabung sebagai ${username}${isAdmin ? ' (Admin)' : ''}`);
+            playSoundJoin();
             
-            // Load friends
-            database.ref(`friends/${myUserId}`).once('value', (snap) => {
-                friends.clear();
-                snap.forEach((child) => { friends.add(child.key); });
+            // Listen kicks
+            database.ref(`kicks/${roomCode}`).on('child_added', (snap) => {
+                if (snap.key === myUserId) {
+                    showToast("Anda dikick oleh admin");
+                    endMeeting();
+                }
             });
             
-            // Listen friend requests
-            database.ref(`friendRequests/${myUserId}`).on('value', (snap) => {
-                pendingRequests.clear();
-                snap.forEach((child) => { pendingRequests.set(child.key, child.val()); });
-                updateFriendNotif();
+            // Listen mutes
+            database.ref(`mutes/${roomCode}`).on('child_added', (snap) => {
+                if (snap.key === myUserId && myStream) {
+                    const audioTrack = myStream.getAudioTracks()[0];
+                    if (audioTrack && !audioTrack.enabled) return;
+                    if (audioTrack) {
+                        audioTrack.enabled = false;
+                        isMicMuted = true;
+                        micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        const localCard = document.getElementById('local-video-card');
+                        if (localCard) {
+                            const badge = localCard.querySelector('.mic-badge');
+                            if (badge) badge.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        }
+                        showToast("Admin mematikan mic Anda");
+                    }
+                }
             });
             
-            // Listen users in room
+            database.ref(`mutes/${roomCode}`).on('child_removed', (snap) => {
+                if (snap.key === myUserId && myStream) {
+                    const audioTrack = myStream.getAudioTracks()[0];
+                    if (audioTrack && !isMicMuted) {
+                        audioTrack.enabled = true;
+                        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                        const localCard = document.getElementById('local-video-card');
+                        if (localCard) {
+                            const badge = localCard.querySelector('.mic-badge');
+                            if (badge) badge.innerHTML = '<i class="fas fa-microphone"></i>';
+                        }
+                        showToast("Admin menghidupkan mic Anda");
+                    }
+                }
+            });
+            
+            // Listen users
             roomRef.child('users').on('child_added', async (snap) => {
                 const peerId = snap.key;
                 const peerData = snap.val();
-                roomUsers.set(peerId, peerData.username);
+                roomUsers.set(peerId, { username: peerData.username, isAdmin: peerData.isAdmin || false });
                 if (peerId !== myUserId && !peerConnections.has(peerId)) {
                     showToast(`✨ ${peerData.username} bergabung`);
-                    playSound('join');
+                    playSoundJoin();
                     await createPeerConnection(peerId, true);
+                    updateParticipantList();
                 }
             });
             
@@ -609,8 +839,9 @@
                 if (pc) { pc.close(); peerConnections.delete(peerId); }
                 removeRemoteVideo(peerId);
                 roomUsers.delete(peerId);
-                playSound('leave');
+                playSoundLeave();
                 showToast(`🚶 Seseorang meninggalkan ruangan`);
+                updateParticipantList();
             });
             
             // WebRTC signaling
@@ -618,10 +849,12 @@
                 if (snap.key !== myUserId) {
                     let pc = peerConnections.get(snap.key);
                     if (!pc) pc = await createPeerConnection(snap.key, false);
-                    await pc.setRemoteDescription(new RTCSessionDescription(snap.val()));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    await roomRef.child(`answers/${snap.key}/${myUserId}`).set({ sdp: answer.sdp, type: answer.type });
+                    if (pc && !pc.remoteDescription) {
+                        await pc.setRemoteDescription(new RTCSessionDescription(snap.val()));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        await roomRef.child(`answers/${snap.key}/${myUserId}`).set({ sdp: answer.sdp, type: answer.type });
+                    }
                 }
             });
             
@@ -647,28 +880,50 @@
                 }
             });
             
+            // Chat
+            roomRef.child('chat').on('child_added', (snap) => {
+                const msg = snap.val();
+                if (msg.userId !== myUserId) {
+                    appendChatMessage(msg.username, msg.text, false);
+                    showToast(`💬 ${msg.username}: ${msg.text.substring(0, 40)}`);
+                }
+            });
+            
+            updateParticipantList();
+            
         } catch (err) {
             console.error(err);
             showToast("Gagal: " + err.message);
             updateStatus("Gagal terhubung", null);
-            if (myStream) { myStream.getTracks().forEach(t => t.stop()); myStream = null; }
+            if (myStream) {
+                myStream.getTracks().forEach(t => t.stop());
+                myStream = null;
+            }
         }
     }
 
     async function endMeeting() {
         showToast("Meninggalkan ruangan...");
         updateStatus("Meninggalkan...");
-        playSound('leave');
+        playSoundLeave();
         
-        for (let [peerId, pc] of peerConnections.entries()) { try { pc.close(); } catch(e) {} }
+        for (let [peerId, pc] of peerConnections.entries()) {
+            try { pc.close(); } catch(e) {}
+        }
         peerConnections.clear();
         
         if (roomRef && myUserId) {
-            try { await roomRef.child(`users/${myUserId}`).remove(); roomRef.off(); } catch(e) {}
+            try {
+                await roomRef.child(`users/${myUserId}`).remove();
+                roomRef.off();
+            } catch(e) {}
             roomRef = null;
         }
         
-        if (myStream) { myStream.getTracks().forEach(track => { try { track.stop(); } catch(e) {} }); myStream = null; }
+        if (myStream) {
+            myStream.getTracks().forEach(track => { try { track.stop(); } catch(e) {} });
+            myStream = null;
+        }
         
         const cards = videoGrid.querySelectorAll('.video-card');
         cards.forEach(c => c.remove());
@@ -676,16 +931,19 @@
         empty.className = 'empty-state';
         empty.innerHTML = '🎥 Belum ada video<br>Buat atau gabung ruang dulu';
         videoGrid.appendChild(empty);
-        homeLogo.style.opacity = '0.2';
+        homeLogo.style.opacity = '0.15';
         
         toolbar.style.display = 'none';
         joinSheet.classList.remove('hide');
-        friendPopup.classList.remove('open');
+        chatMessages.innerHTML = '';
+        chatPanel.classList.remove('open');
+        participantPopup.classList.remove('open');
         overlay.classList.remove('open');
         
         currentRoomId = null;
         myUserId = null;
         roomUsers.clear();
+        isAdmin = false;
         isMicMuted = false;
         isVideoOff = false;
         localVideoElement = null;
@@ -696,50 +954,13 @@
         updateStatus("Belum terhubung", null);
     }
 
-    function updateFriendPopup() {
-        let html = '';
-        for (let [userId, username] of roomUsers.entries()) {
-            if (userId !== myUserId) {
-                const isFriend = friends.has(userId);
-                html += `<div class="friend-request-item">
-                    <span><i class="fas fa-user-circle"></i> <strong>${escapeHtml(username)}</strong> ${isFriend ? '<span style="color:#34c759;">⭐ Teman</span>' : ''}</span>
-                    <div>
-                        ${!isFriend ? `<button onclick="window.sendFriend('${userId}', '${escapeHtml(username)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;">➕ Teman</button>` : '<span style="color:#34c759;">✓</span>'}
-                    </div>
-                </div>`;
-            }
-        }
-        
-        let pendingHtml = '';
-        if (pendingRequests.size > 0) {
-            pendingHtml = '<div style="padding:12px 16px; background:rgba(10,132,255,0.2);"><strong>📨 Permintaan</strong></div>';
-            pendingRequests.forEach((req, fromId) => {
-                pendingHtml += `<div class="friend-request-item">
-                    <span><strong>${escapeHtml(req.fromName)}</strong> ingin berteman</span>
-                    <div>
-                        <button onclick="window.acceptFriend('${fromId}', '${escapeHtml(req.fromName)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:6px 12px; color:white; margin-right:8px; cursor:pointer;">✓</button>
-                        <button onclick="window.rejectFriend('${fromId}')" style="background:#ff3b30; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;">✗</button>
-                    </div>
-                </div>`;
-            });
-        }
-        
-        document.getElementById('friendList').innerHTML = pendingHtml + (html || '<div style="padding:16px; text-align:center; color:#8e8e93;">Tidak ada pengguna lain</div>');
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, (m) => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
-    }
-
-    // Event handlers
-    document.querySelectorAll('.mode-option').forEach(opt => {
-        opt.onclick = () => {
-            document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            roomMode = opt.getAttribute('data-mode');
-        };
-    });
+    // ==================== EVENT HANDLERS ====================
+    
+    // Hilangkan booting
+    setTimeout(() => {
+        booting.classList.add('hide');
+        setTimeout(() => booting.style.display = 'none', 500);
+    }, 1500);
     
     createBtn.onclick = async () => {
         let username = usernameInput.value.trim();
@@ -752,10 +973,7 @@
     randomBtn.onclick = async () => {
         let username = usernameInput.value.trim();
         if (!username) { username = "User_" + Math.floor(Math.random() * 1000); usernameInput.value = username; }
-        const randomRoom = "pub_" + Math.random().toString(36).substring(2, 8);
-        roomMode = "public";
-        document.querySelector('.mode-option[data-mode="public"]').classList.add('active');
-        document.querySelector('.mode-option[data-mode="private"]').classList.remove('active');
+        const randomRoom = "meet_" + Math.random().toString(36).substring(2, 8);
         roomInput.value = randomRoom;
         await startMeeting(randomRoom, username);
     };
@@ -786,7 +1004,7 @@
         }
     };
     
-    videoBtn.onclick = () => {
+        videoBtn.onclick = () => {
         if (myStream) {
             const videoTrack = myStream.getVideoTracks()[0];
             if (videoTrack) {
@@ -795,6 +1013,8 @@
                 videoBtn.innerHTML = isVideoOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
                 showToast(isVideoOff ? "Kamera OFF" : "Kamera ON");
             }
+        } else {
+            showToast("Belum masuk ruangan");
         }
     };
     
@@ -803,74 +1023,137 @@
             const oldVideo = myStream.getVideoTracks()[0];
             const oldAudio = myStream.getAudioTracks()[0];
             const oldAudioEnabled = oldAudio ? oldAudio.enabled : true;
+            
             if (oldVideo) oldVideo.stop();
             isFrontCamera = !isFrontCamera;
+            
             try {
                 const newStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: isFrontCamera ? "user" : "environment" },
-                    audio: oldAudio ? { echoCancellation: true } : false
+                    audio: oldAudio ? { echoCancellation: true, noiseSuppression: true } : false
                 });
                 const newVideo = newStream.getVideoTracks()[0];
                 myStream.removeTrack(oldVideo);
                 myStream.addTrack(newVideo);
-                if (oldAudio && !myStream.getAudioTracks().length) { myStream.addTrack(oldAudio); oldAudio.enabled = oldAudioEnabled; }
-                if (localVideoElement) localVideoElement.srcObject = myStream;
-                for (let [peerId, pc] of peerConnections.entries()) {
-                    try { const sender = pc.getSenders().find(s => s.track?.kind === 'video'); if (sender) sender.replaceTrack(newVideo); } catch(e) {}
+                if (oldAudio && !myStream.getAudioTracks().length) {
+                    myStream.addTrack(oldAudio);
+                    oldAudio.enabled = oldAudioEnabled;
                 }
-                                showToast(isFrontCamera ? "Kamera depan" : "Kamera belakang");
+                if (localVideoElement) localVideoElement.srcObject = myStream;
+                
+                // Update tracks di semua peer connection
+                for (let [peerId, pc] of peerConnections.entries()) {
+                    try {
+                        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+                        if (sender) sender.replaceTrack(newVideo);
+                    } catch(e) {}
+                }
+                showToast(isFrontCamera ? "📱 Kamera depan" : "📷 Kamera belakang");
             } catch(e) {
+                console.error("Gagal ganti kamera:", e);
                 showToast("Gagal ganti kamera");
                 isFrontCamera = !isFrontCamera;
             }
+        } else {
+            showToast("Belum masuk ruangan");
         }
     };
     
-    friendBtn.onclick = () => {
+    participantBtn.onclick = () => {
         if (!roomRef) {
             showToast("Belum masuk ruangan");
             return;
         }
-        updateFriendPopup();
-        friendPopup.classList.add('open');
+        updateParticipantList();
+        participantPopup.classList.add('open');
         overlay.classList.add('open');
+    };
+    
+    chatBtn.onclick = () => {
+        if (!roomRef) {
+            showToast("Belum masuk ruangan");
+            return;
+        }
+        chatPanel.classList.toggle('open');
     };
     
     hangupBtn.onclick = () => {
         endMeeting();
     };
     
-    closeFriendPopup.onclick = () => {
-        friendPopup.classList.remove('open');
+    closeChat.onclick = () => {
+        chatPanel.classList.remove('open');
+    };
+    
+    closeParticipant.onclick = () => {
+        participantPopup.classList.remove('open');
         overlay.classList.remove('open');
     };
     
     overlay.onclick = () => {
-        friendPopup.classList.remove('open');
+        participantPopup.classList.remove('open');
         overlay.classList.remove('open');
+        chatPanel.classList.remove('open');
     };
     
-    window.sendFriend = (userId, username) => {
-        sendFriendRequest(userId, username);
-        friendPopup.classList.remove('open');
-        overlay.classList.remove('open');
+    sendChatBtn.onclick = () => {
+        const text = chatInput.value.trim();
+        if (text) {
+            sendPublicMessage(text);
+            chatInput.value = '';
+        }
     };
     
-    window.acceptFriend = (fromId, fromName) => {
-        acceptFriendRequest(fromId, fromName);
-        updateFriendPopup();
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatBtn.click();
+        }
+    });
+    
+    // Admin actions
+    if (muteAllBtn) {
+        muteAllBtn.onclick = () => {
+            if (!isAdmin) {
+                showToast("Hanya admin yang bisa mute semua");
+                return;
+            }
+            muteAllUsers();
+        };
+    }
+    
+    if (unmuteAllBtn) {
+        unmuteAllBtn.onclick = () => {
+            if (!isAdmin) {
+                showToast("Hanya admin yang bisa unmute semua");
+                return;
+            }
+            unmuteAllUsers();
+        };
+    }
+    
+    // Expose functions ke window untuk dipanggil dari HTML
+    window.kickUser = (userId, username) => {
+        if (!isAdmin) {
+            showToast("Hanya admin yang bisa kick");
+            return;
+        }
+        kickUser(userId, username);
     };
     
-    window.rejectFriend = (fromId) => {
-        rejectFriendRequest(fromId);
-        updateFriendPopup();
+    window.muteUser = (userId) => {
+        if (!isAdmin) {
+            showToast("Hanya admin yang bisa mute");
+            return;
+        }
+        muteUser(userId);
     };
     
     // Set default values
     usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
     roomInput.value = "";
     
-    // Cleanup
+    // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
         if (roomRef && myUserId) {
             roomRef.child(`users/${myUserId}`).remove();
@@ -882,6 +1165,9 @@
     
     window.addEventListener('online', () => {
         showToast("📡 Koneksi kembali");
+        if (!roomRef && currentRoomId) {
+            showToast("Silakan buat/gabung ulang ruangan");
+        }
     });
     
     window.addEventListener('offline', () => {
@@ -889,7 +1175,8 @@
         updateStatus("Koneksi putus", currentRoomId);
     });
     
-    console.log('✨ ZOoLY siap! Video call stabil, tanpa chat, tombol tidak nabrak');
+    console.log('✨ VoxMeet siap! ✨');
+    console.log('Fitur: Video Call | Chat | Admin bisa kick/mute | Unlimited peserta');
 </script>
 </body>
 </html>
