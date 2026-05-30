@@ -20,9 +20,9 @@
             overflow: hidden;
             height: 100vh;
             width: 100vw;
+            position: fixed;
         }
 
-        /* LOGO DI HOME SCREEN */
         .home-logo {
             position: fixed;
             top: 50%;
@@ -32,27 +32,12 @@
             z-index: 5;
             pointer-events: none;
             opacity: 0.15;
+            transition: opacity 0.3s;
         }
-        .home-logo .logo-icon {
-            font-size: 100px;
-            margin-bottom: 10px;
-        }
-        .home-logo .logo-text {
-            font-size: 48px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #0a84ff, #5e5ce0);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .home-logo .logo-sub {
-            font-size: 12px;
-            color: #8e8e93;
-            margin-top: 8px;
-        }
+        .home-logo .logo-icon { font-size: 100px; margin-bottom: 10px; }
+        .home-logo .logo-text { font-size: 48px; font-weight: 800; letter-spacing: 2px; background: linear-gradient(135deg, #0a84ff, #5e5ce0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .home-logo .logo-sub { font-size: 12px; color: #8e8e93; margin-top: 8px; }
 
-        /* JOIN SHEET */
         .join-sheet {
             position: fixed;
             bottom: 0;
@@ -120,7 +105,6 @@
         }
         .mode-option.active { background: #0a84ff; color: white; }
 
-        /* STATUS BAR */
         .status-bar {
             position: fixed;
             top: 50px;
@@ -143,7 +127,6 @@
         .status-badge { background: #0a84ff; border-radius: 30px; padding: 4px 12px; font-size: 11px; }
         .status-online { background: #34c759; }
 
-        /* VIDEO GRID */
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -188,7 +171,6 @@
             z-index: 5;
         }
 
-        /* TOOLBAR */
         .toolbar {
             position: fixed;
             bottom: 20px;
@@ -230,26 +212,35 @@
             min-width: 16px;
         }
 
-        /* CHAT PANEL */
         .chat-home {
             position: fixed;
-            bottom: 90px;
-            left: 16px;
-            right: 16px;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: rgba(30,30,35,0.98);
             backdrop-filter: blur(50px);
-            border-radius: 28px;
+            border-radius: 32px 32px 0 0;
             z-index: 105;
-            transform: translateY(500px);
-            transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            border: 0.5px solid rgba(255,255,255,0.15);
-            max-height: 60vh;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border-top: 0.5px solid rgba(255,255,255,0.15);
+            max-height: 70vh;
             display: flex;
             flex-direction: column;
         }
-        .chat-home.open { transform: translateY(0); }
+        .chat-home.open { transform: translateY(calc(100% - 70px)); }
+        .chat-home.full { transform: translateY(0); }
+        
+        .chat-handle {
+            width: 40px;
+            height: 4px;
+            background: #8e8e93;
+            border-radius: 4px;
+            margin: 12px auto;
+            cursor: pointer;
+        }
         .chat-header {
-            padding: 14px 16px;
+            padding: 8px 16px 14px;
             font-weight: 600;
             border-bottom: 0.5px solid rgba(255,255,255,0.1);
             display: flex;
@@ -273,7 +264,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 12px;
-            min-height: 250px;
+            min-height: 200px;
             max-height: 350px;
         }
         .chat-message {
@@ -320,22 +311,30 @@
 
         .friend-popup {
             position: fixed;
-            top: 100px;
-            left: 16px;
-            right: 16px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 350px;
             background: rgba(30,30,35,0.98);
             backdrop-filter: blur(40px);
             border-radius: 28px;
             z-index: 110;
-            transform: translateY(-500px);
-            transition: 0.3s;
+            transition: 0.2s;
             border: 0.5px solid rgba(255,255,255,0.2);
+            opacity: 0;
+            visibility: hidden;
         }
-        .friend-popup.open { transform: translateY(0); }
+        .friend-popup.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
         .friend-popup-header {
             padding: 16px;
             font-weight: 600;
             border-bottom: 0.5px solid rgba(255,255,255,0.1);
+            text-align: center;
         }
         .friend-request-item {
             padding: 14px 16px;
@@ -343,6 +342,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .toast {
             position: fixed;
@@ -366,11 +367,32 @@
             padding: 40px;
             font-size: 14px;
         }
+        .blocked-badge {
+            background: #ff3b30;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 108;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.2s;
+        }
+        .overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
 
-<!-- LOGO DI HOME SCREEN -->
 <div id="homeLogo" class="home-logo">
     <div class="logo-icon">🎥</div>
     <div class="logo-text">ZOoLY</div>
@@ -412,6 +434,7 @@
 </div>
 
 <div id="chatHome" class="chat-home">
+    <div class="chat-handle" id="chatHandle"></div>
     <div class="chat-header">
         <span><i class="fas fa-comment"></i> Pesan</span>
         <button id="closeChatHome" style="background:none; border:none; color:white; font-size:20px;">✕</button>
@@ -430,14 +453,15 @@
     </div>
 </div>
 
+<div id="overlay" class="overlay"></div>
 <div id="friendPopup" class="friend-popup">
-    <div class="friend-popup-header"><i class="fas fa-user-friends"></i> Pengguna di Ruangan</div>
-    <div id="friendRequestsList"></div>
+    <div class="friend-popup-header"><i class="fas fa-user-friends"></i> Kelola Pengguna</div>
+    <div id="friendRequestsList" style="max-height: 400px; overflow-y: auto;"></div>
+    <button id="closeFriendPopup" style="width:100%; padding:14px; background:none; border:none; border-top:0.5px solid rgba(255,255,255,0.1); color:#0a84ff; font-weight:600;">Tutup</button>
 </div>
 
 <div id="toastMsg" class="toast"></div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -477,12 +501,14 @@
     const hangupBtn = document.getElementById('hangupBtn');
     const chatHome = document.getElementById('chatHome');
     const closeChatHome = document.getElementById('closeChatHome');
+    const chatHandle = document.getElementById('chatHandle');
     const chatMessagesList = document.getElementById('chatMessagesList');
     const chatHomeInput = document.getElementById('chatHomeInput');
     const sendChatHomeBtn = document.getElementById('sendChatHomeBtn');
     const chatToSelect = document.getElementById('chatToSelect');
     const friendPopup = document.getElementById('friendPopup');
-    const friendRequestsList = document.getElementById('friendRequestsList');
+    const overlay = document.getElementById('overlay');
+    const closeFriendPopup = document.getElementById('closeFriendPopup');
     const friendNotif = document.getElementById('friendNotif');
     const toastMsg = document.getElementById('toastMsg');
 
@@ -499,14 +525,15 @@
     let localVideoElement = null;
     let roomMode = "public";
     let friends = new Set();
+    let blocked = new Set();
     let pendingRequests = new Map();
     let roomUsers = new Map();
+    let isFullScreen = false;
 
     const configuration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' }
         ]
     };
 
@@ -517,19 +544,10 @@
     }
 
     function playJoinSound() {
-        try {
-            const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
-            audio.volume = 0.2;
-            audio.play().catch(e => {});
-        } catch(e) {}
+        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'); audio.volume = 0.2; audio.play().catch(e=>{}); } catch(e) {}
     }
-    
     function playLeaveSound() {
-        try {
-            const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3');
-            audio.volume = 0.2;
-            audio.play().catch(e => {});
-        } catch(e) {}
+        try { const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-06.mp3'); audio.volume = 0.2; audio.play().catch(e=>{}); } catch(e) {}
     }
 
     function updateStatus(status, roomName = null) {
@@ -563,7 +581,7 @@
         const micSpan = document.createElement('div');
         micSpan.className = 'mic-badge';
         micSpan.innerHTML = '<i class="fas fa-microphone"></i>';
-                container.appendChild(video);
+        container.appendChild(video);
         container.appendChild(nameSpan);
         container.appendChild(micSpan);
         videoGrid.appendChild(container);
@@ -572,6 +590,8 @@
 
     function addRemoteVideo(stream, peerId, userName) {
         if (document.getElementById(`remote-${peerId}`)) return;
+        if (blocked.has(peerId)) return;
+        
         const empty = videoGrid.querySelector('.empty-state');
         if (empty) empty.remove();
         homeLogo.style.opacity = '0';
@@ -625,9 +645,44 @@
         friendNotif.innerText = count;
     }
 
+    function blockUser(targetUserId, targetUsername) {
+        if (blocked.has(targetUserId)) return;
+        blocked.add(targetUserId);
+        database.ref(`blocks/${myUserId}/${targetUserId}`).set({ username: targetUsername, timestamp: Date.now() });
+        
+        const pc = peerConnections.get(targetUserId);
+        if (pc) { pc.close(); peerConnections.delete(targetUserId); }
+        removeRemoteVideo(targetUserId);
+        
+        if (friends.has(targetUserId)) {
+            friends.delete(targetUserId);
+            database.ref(`friends/${myUserId}/${targetUserId}`).remove();
+            database.ref(`friends/${targetUserId}/${myUserId}`).remove();
+        }
+        showToast(`${targetUsername} diblokir`);
+        updateChatSelect();
+    }
+
+    function unblockUser(targetUserId) {
+        if (!blocked.has(targetUserId)) return;
+        blocked.delete(targetUserId);
+        database.ref(`blocks/${myUserId}/${targetUserId}`).remove();
+        showToast(`Blokir dicabut`);
+        updateChatSelect();
+        
+        // Reconnect if user still in room
+        if (roomRef && roomUsers.has(targetUserId) && !peerConnections.has(targetUserId)) {
+            setTimeout(() => createPeerConnection(targetUserId, true), 500);
+        }
+    }
+
     function sendFriendRequest(targetUserId, targetUsername) {
         if (friends.has(targetUserId)) {
             showToast(`Sudah berteman dengan ${targetUsername}`);
+            return;
+        }
+        if (blocked.has(targetUserId)) {
+            showToast(`Tidak bisa mengirim permintaan ke pengguna yang diblokir`);
             return;
         }
         database.ref(`friendRequests/${targetUserId}/${myUserId}`).set({
@@ -647,6 +702,11 @@
         updateFriendNotif();
         updateChatSelect();
         showToast(`${fromName} sekarang teman Anda!`);
+        
+        // Reconnect video if needed
+        if (roomRef && roomUsers.has(fromId) && !peerConnections.has(fromId) && !blocked.has(fromId)) {
+            setTimeout(() => createPeerConnection(fromId, true), 500);
+        }
     }
 
     function rejectFriendRequest(fromId) {
@@ -659,7 +719,7 @@
     function updateChatSelect() {
         chatToSelect.innerHTML = '<option value="all">📢 Semua peserta</option>';
         for (let [userId, username] of roomUsers.entries()) {
-            if (userId !== myUserId) {
+            if (userId !== myUserId && !blocked.has(userId)) {
                 const isFriend = friends.has(userId);
                 chatToSelect.innerHTML += `<option value="${userId}">${isFriend ? '⭐' : '👤'} ${escapeHtml(username)}</option>`;
             }
@@ -681,20 +741,18 @@
 
     function sendPrivateMessage(toUserId, text) {
         if (!toUserId || !text.trim()) return;
+        if (blocked.has(toUserId)) {
+            showToast("Tidak bisa mengirim pesan ke pengguna yang diblokir");
+            return;
+        }
         database.ref(`privateMessages/${toUserId}`).push({
             from: myUserId,
             fromName: currentUsername,
             text: text,
             timestamp: Date.now()
         });
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-message sent';
-        const textSpan = document.createElement('div');
-        textSpan.innerText = text;
-        msgDiv.appendChild(textSpan);
-        chatMessagesList.appendChild(msgDiv);
-        chatMessagesList.scrollTop = chatMessagesList.scrollHeight;
-        showToast(`💬 Pesan terkirim`);
+        appendChatMessage(currentUsername, text, true);
+        showToast(`💬 Pesan terkirim ke ${roomUsers.get(toUserId) || 'teman'}`);
     }
 
     function escapeHtml(str) {
@@ -702,25 +760,111 @@
         return str.replace(/[&<>]/g, (m) => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
     }
 
-    // WebRTC Functions
+    // ==================== WebRTC Functions ====================
     async function createPeerConnection(targetUserId, isInitiator = false) {
-        const pc = new RTCPeerConnection(configuration);
-        if (myStream) myStream.getTracks().forEach(track => pc.addTrack(track, myStream));
+        if (blocked.has(targetUserId)) return null;
         
-        pc.ontrack = (event) => addRemoteVideo(event.streams[0], targetUserId, roomUsers.get(targetUserId) || 'Teman');
+        const pc = new RTCPeerConnection(configuration);
+        
+        // Add local tracks
+        if (myStream) {
+            myStream.getTracks().forEach(track => {
+                pc.addTrack(track, myStream);
+            });
+        }
+        
+        // Handle remote stream
+        pc.ontrack = (event) => {
+            if (!blocked.has(targetUserId)) {
+                addRemoteVideo(event.streams[0], targetUserId, roomUsers.get(targetUserId) || 'Teman');
+            }
+        };
+        
+        // Handle ICE candidates
         pc.onicecandidate = (event) => {
-            if (event.candidate && roomRef) {
+            if (event.candidate && roomRef && !blocked.has(targetUserId)) {
                 roomRef.child(`candidates/${targetUserId}/${myUserId}`).push(event.candidate.toJSON());
             }
         };
+        
+        // Handle connection state
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+                peerConnections.delete(targetUserId);
+                removeRemoteVideo(targetUserId);
+            } else if (pc.connectionState === 'connected') {
+                console.log(`Connected to ${targetUserId}`);
+            }
+        };
+        
         peerConnections.set(targetUserId, pc);
         
-        if (isInitiator) {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            if (roomRef) await roomRef.child(`offers/${targetUserId}`).set({ sdp: offer.sdp, type: offer.type, from: myUserId });
+        if (isInitiator && !blocked.has(targetUserId)) {
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                if (roomRef) {
+                    await roomRef.child(`offers/${targetUserId}`).set({ 
+                        sdp: offer.sdp, 
+                        type: offer.type, 
+                        from: myUserId 
+                    });
+                }
+            } catch (err) {
+                console.error("Error creating offer:", err);
+            }
         }
         return pc;
+    }
+
+    async function handleOffer(offerData, fromId) {
+        if (blocked.has(fromId)) return;
+        
+        let pc = peerConnections.get(fromId);
+        if (!pc) {
+            pc = await createPeerConnection(fromId, false);
+        }
+        if (pc && !pc.remoteDescription) {
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(offerData));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                if (roomRef) {
+                    await roomRef.child(`answers/${fromId}/${myUserId}`).set({ 
+                        sdp: answer.sdp, 
+                        type: answer.type 
+                    });
+                }
+            } catch (err) {
+                console.error("Error handling offer:", err);
+            }
+        }
+    }
+
+    async function handleAnswer(answerData, fromId) {
+        if (blocked.has(fromId)) return;
+        
+        const pc = peerConnections.get(fromId);
+        if (pc && !pc.remoteDescription) {
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(answerData));
+            } catch (err) {
+                console.error("Error handling answer:", err);
+            }
+        }
+    }
+
+    async function handleCandidate(candidateData, fromId) {
+        if (blocked.has(fromId)) return;
+        
+        const pc = peerConnections.get(fromId);
+        if (pc) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidateData));
+            } catch(e) {
+                console.error('Error adding ICE candidate:', e);
+            }
+        }
     }
 
     async function startMeeting(roomCode, username) {
@@ -734,13 +878,22 @@
         showToast(`Menghubung ke ${roomCode}...`);
         
         try {
-            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            // Get user media
+            myStream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: { echoCancellation: true, noiseSuppression: true } 
+            });
             addLocalVideo(myStream, username);
             toolbar.style.display = 'flex';
             joinSheet.classList.add('hide');
             
+            // Firebase room reference
             roomRef = database.ref(`rooms/${roomCode}`);
-            await roomRef.child(`users/${myUserId}`).set({ username: username, timestamp: Date.now(), mode: roomMode });
+            await roomRef.child(`users/${myUserId}`).set({ 
+                username: username, 
+                timestamp: Date.now(), 
+                mode: roomMode 
+            });
             roomRef.child(`users/${myUserId}`).onDisconnect().remove();
             
             updateStatus(`Terhubung ke ${roomCode}`, roomCode);
@@ -749,39 +902,64 @@
             
             // Load friends
             database.ref(`friends/${myUserId}`).once('value', (snap) => {
+                friends.clear();
                 snap.forEach((child) => { friends.add(child.key); });
                 updateChatSelect();
             });
             
-            database.ref(`friendRequests/${myUserId}`).on('value', (snap) => {
-                pendingRequests.clear();
-                snap.forEach((child) => { pendingRequests.set(child.key, child.val()); });
-                updateFriendNotif();
+            // Load blocked users
+            database.ref(`blocks/${myUserId}`).once('value', (snap) => {
+                blocked.clear();
+                snap.forEach((child) => { blocked.add(child.key); });
+                updateChatSelect();
             });
             
+            // Listen for friend requests
+            database.ref(`friendRequests/${myUserId}`).on('value', (snap) => {
+                pendingRequests.clear();
+                snap.forEach((child) => { 
+                    pendingRequests.set(child.key, child.val()); 
+                });
+                updateFriendNotif();
+                
+                // Update popup content
+                if (friendPopup.classList.contains('open')) {
+                    updateFriendPopupContent();
+                }
+            });
+            
+            // Listen for private messages
             database.ref(`privateMessages/${myUserId}`).on('child_added', (userSnap) => {
+                if (blocked.has(userSnap.key)) return;
                 userSnap.forEach((msgSnap) => {
                     const msg = msgSnap.val();
                     appendChatMessage(msg.fromName, msg.text, false);
+                    showToast(`💬 Pesan dari ${msg.fromName}`);
                 });
             });
             
+            // Listen for users in room
             roomRef.child('users').on('child_added', async (snap) => {
                 const peerId = snap.key;
                 const peerData = snap.val();
                 roomUsers.set(peerId, peerData.username);
-                if (peerId !== myUserId && !peerConnections.has(peerId)) {
-                    showToast(`✨ ${peerData.username} bergabung`);
+                
+                if (peerId !== myUserId && !peerConnections.has(peerId) && !blocked.has(peerId)) {
+                    showToast(`✨ ${peerData.username} bergabung ke ruang`);
                     playJoinSound();
                     updateChatSelect();
                     await createPeerConnection(peerId, true);
                 }
             });
             
+            // Listen for users leaving
             roomRef.child('users').on('child_removed', (snap) => {
                 const peerId = snap.key;
                 const pc = peerConnections.get(peerId);
-                if (pc) { pc.close(); peerConnections.delete(peerId); }
+                if (pc) { 
+                    pc.close(); 
+                    peerConnections.delete(peerId); 
+                }
                 removeRemoteVideo(peerId);
                 roomUsers.delete(peerId);
                 updateChatSelect();
@@ -789,42 +967,39 @@
                 showToast(`🚶 Seseorang meninggalkan ruangan`);
             });
             
+            // Listen for WebRTC offers
             roomRef.child('offers').on('child_added', async (snap) => {
-                if (snap.key !== myUserId) {
-                    let pc = peerConnections.get(snap.key);
-                    if (!pc) pc = await createPeerConnection(snap.key, false);
-                    await pc.setRemoteDescription(new RTCSessionDescription(snap.val()));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    await roomRef.child(`answers/${snap.key}/${myUserId}`).set({ sdp: answer.sdp, type: answer.type });
+                if (snap.key !== myUserId && !blocked.has(snap.key)) {
+                    await handleOffer(snap.val(), snap.key);
                 }
             });
             
+            // Listen for WebRTC answers
             roomRef.child('answers').on('child_added', async (snap) => {
-                if (snap.key !== myUserId) {
+                if (snap.key !== myUserId && !blocked.has(snap.key)) {
                     for (let [aid, ans] of Object.entries(snap.val())) {
                         if (aid === myUserId) {
-                            const pc = peerConnections.get(snap.key);
-                            if (pc) await pc.setRemoteDescription(new RTCSessionDescription(ans));
+                            await handleAnswer(ans, snap.key);
                         }
                     }
                 }
             });
             
+            // Listen for ICE candidates
             roomRef.child('candidates').on('child_added', async (snap) => {
-                if (snap.key !== myUserId) {
+                if (snap.key !== myUserId && !blocked.has(snap.key)) {
                     for (let [cid, cand] of Object.entries(snap.val())) {
                         if (cid !== myUserId) {
-                            const pc = peerConnections.get(snap.key);
-                            if (pc) await pc.addIceCandidate(new RTCIceCandidate(cand));
+                            await handleCandidate(cand, snap.key);
                         }
                     }
                 }
             });
             
+            // Listen for public chat
             roomRef.child('chat').on('child_added', (snap) => {
                 const msg = snap.val();
-                if (msg.userId !== myUserId) {
+                if (msg.userId !== myUserId && !blocked.has(msg.userId)) {
                     appendChatMessage(msg.username, msg.text, false);
                     showToast(`💬 ${msg.username}: ${msg.text.substring(0, 40)}`);
                 }
@@ -848,24 +1023,33 @@
         updateStatus("Meninggalkan...");
         playLeaveSound();
         
+        // Close all peer connections
         for (let [peerId, pc] of peerConnections.entries()) {
             try { pc.close(); } catch(e) {}
         }
         peerConnections.clear();
         
+        // Remove from Firebase
         if (roomRef && myUserId) {
             try {
                 await roomRef.child(`users/${myUserId}`).remove();
+                await roomRef.child(`offers/${myUserId}`).remove();
+                await roomRef.child(`answers/${myUserId}`).remove();
+                await roomRef.child(`candidates/${myUserId}`).remove();
                 roomRef.off();
             } catch(e) {}
             roomRef = null;
         }
         
+        // Stop media tracks
         if (myStream) {
-            myStream.getTracks().forEach(track => { try { track.stop(); } catch(e) {} });
+            myStream.getTracks().forEach(track => { 
+                try { track.stop(); } catch(e) {} 
+            });
             myStream = null;
         }
         
+        // Clear video grid
         const cards = videoGrid.querySelectorAll('.video-card');
         cards.forEach(c => c.remove());
         
@@ -875,12 +1059,15 @@
         videoGrid.appendChild(empty);
         homeLogo.style.opacity = '0.15';
         
+        // Hide UI
         toolbar.style.display = 'none';
         joinSheet.classList.remove('hide');
         chatMessagesList.innerHTML = '';
-        chatHome.classList.remove('open');
+        chatHome.classList.remove('open', 'full');
         friendPopup.classList.remove('open');
+        overlay.classList.remove('open');
         
+                // Reset state
         currentRoomId = null;
         myUserId = null;
         roomUsers.clear();
@@ -894,8 +1081,73 @@
         updateStatus("Belum terhubung", null);
     }
 
-    // ==================== EVENT HANDLERS ====================
+    function updateFriendPopupContent() {
+        let options = '';
+        for (let [userId, username] of roomUsers.entries()) {
+            if (userId !== myUserId) {
+                const isFriend = friends.has(userId);
+                const isBlocked = blocked.has(userId);
+                options += `<div class="friend-request-item">
+                    <span><i class="fas fa-user-circle"></i> <strong>${escapeHtml(username)}</strong> ${isFriend ? '<span style="color:#34c759;">⭐ Teman</span>' : ''} ${isBlocked ? '<span class="blocked-badge">Diblokir</span>' : ''}</span>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        ${!isFriend && !isBlocked ? `<button onclick="window.sendFriendRequestFromPopup('${userId}', '${escapeHtml(username)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;">➕ Teman</button>` : ''}
+                        ${!isBlocked ? `<button onclick="window.blockUserFromPopup('${userId}', '${escapeHtml(username)}')" style="background:#ff3b30; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;">🚫 Blokir</button>` : `<button onclick="window.unblockUserFromPopup('${userId}')" style="background:#34c759; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;">🔓 Buka Blokir</button>`}
+                    </div>
+                </div>`;
+            }
+        }
+        
+        let pendingHtml = '';
+        if (pendingRequests.size > 0) {
+            pendingHtml = '<div style="padding:12px 16px; background:rgba(10,132,255,0.2); border-bottom:0.5px solid rgba(255,255,255,0.1);"><strong><i class="fas fa-user-plus"></i> Permintaan Masuk</strong></div>';
+            pendingRequests.forEach((req, fromId) => {
+                pendingHtml += `<div class="friend-request-item">
+                    <span><strong>${escapeHtml(req.fromName)}</strong> ingin berteman</span>
+                    <div>
+                        <button onclick="window.acceptFriendRequest('${fromId}', '${escapeHtml(req.fromName)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:6px 12px; color:white; margin-right:8px; cursor:pointer;">✓ Terima</button>
+                        <button onclick="window.rejectFriendRequest('${fromId}')" style="background:#ff3b30; border:none; border-radius:20px; padding:6px 12px; color:white; cursor:pointer;">✗ Tolak</button>
+                    </div>
+                </div>`;
+            });
+        }
+        
+        const friendRequestsList = document.getElementById('friendRequestsList');
+        if (friendRequestsList) {
+            if (pendingHtml === '' && options === '') {
+                friendRequestsList.innerHTML = '<div style="padding:16px; text-align:center; color:#8e8e93;">Tidak ada pengguna lain</div>';
+            } else {
+                friendRequestsList.innerHTML = pendingHtml + options;
+            }
+        }
+    }
+
+    // ==================== SWIPEABLE CHAT LIKE WA ====================
+    let touchStartY = 0;
+    let isFullScreen = false;
     
+    const chatHandle = document.getElementById('chatHandle');
+    if (chatHandle) {
+        chatHandle.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        });
+        
+        chatHandle.addEventListener('touchmove', (e) => {
+            const deltaY = e.touches[0].clientY - touchStartY;
+            if (deltaY < -30 && !isFullScreen) {
+                chatHome.classList.add('full');
+                isFullScreen = true;
+            } else if (deltaY > 30 && isFullScreen) {
+                chatHome.classList.remove('full');
+                isFullScreen = false;
+            }
+        });
+        
+        chatHandle.addEventListener('touchend', () => {
+            // Optional: add snap effect
+        });
+    }
+    
+    // ==================== EVENT HANDLERS ====================
     document.querySelectorAll('.mode-option').forEach(opt => {
         opt.onclick = () => {
             document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('active'));
@@ -1001,6 +1253,7 @@
                 }
                 if (localVideoElement) localVideoElement.srcObject = myStream;
                 
+                // Update tracks in all peer connections
                 for (let [peerId, pc] of peerConnections.entries()) {
                     try {
                         const sender = pc.getSenders().find(s => s.track?.kind === 'video');
@@ -1009,6 +1262,7 @@
                 }
                 showToast(isFrontCamera ? "📱 Kamera depan" : "📷 Kamera belakang");
             } catch(e) {
+                console.error("Gagal ganti kamera:", e);
                 showToast("Gagal ganti kamera");
                 isFrontCamera = !isFrontCamera;
             }
@@ -1022,25 +1276,9 @@
             showToast("Belum masuk ruangan");
             return;
         }
-        
-        if (roomUsers.size <= 1) {
-            showToast("Belum ada pengguna lain di ruangan");
-            return;
-        }
-        
-        let options = '';
-        for (let [userId, username] of roomUsers.entries()) {
-            if (userId !== myUserId) {
-                const isFriend = friends.has(userId);
-                options += `<div class="friend-request-item" style="justify-content:space-between">
-                    <span><i class="fas fa-user-circle"></i> <strong>${escapeHtml(username)}</strong> ${isFriend ? '<span style="color:#34c759;">⭐ Teman</span>' : ''}</span>
-                    ${!isFriend ? `<button onclick="window.sendFriendRequestFromPopup('${userId}', '${escapeHtml(username)}')" style="background:#0a84ff; border:none; border-radius:20px; padding:8px 16px; color:white; cursor:pointer;">➕ Tambah</button>` : '<span style="color:#34c759;"><i class="fas fa-check-circle"></i> Sudah</span>'}
-                </div>`;
-            }
-        }
-        
-        friendRequestsList.innerHTML = options || '<div style="padding:16px; text-align:center; color:#8e8e93;">Tidak ada pengguna lain</div>';
+        updateFriendPopupContent();
         friendPopup.classList.add('open');
+        overlay.classList.add('open');
     };
     
     chatHomeBtn.onclick = () => {
@@ -1049,16 +1287,26 @@
             return;
         }
         chatHome.classList.toggle('open');
+        if (!chatHome.classList.contains('open')) {
+            chatHome.classList.remove('full');
+            isFullScreen = false;
+        }
         updateChatSelect();
     };
     
-    closeChatHome.onclick = () => chatHome.classList.remove('open');
+    const closeChatHome = document.getElementById('closeChatHome');
+    if (closeChatHome) {
+        closeChatHome.onclick = () => {
+            chatHome.classList.remove('open', 'full');
+            isFullScreen = false;
+        };
+    }
     
     hangupBtn.onclick = () => {
         endMeeting();
     };
     
-        sendChatHomeBtn.onclick = () => {
+    sendChatHomeBtn.onclick = () => {
         const text = chatHomeInput.value.trim();
         const target = chatToSelect.value;
         if (!text) {
@@ -1081,35 +1329,71 @@
         }
     });
     
-    // Fungsi untuk send friend request dari popup
+    // Chat tabs
+    document.querySelectorAll('.chat-tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const tabName = tab.getAttribute('data-tab');
+            
+            // Filter messages based on tab
+            const messages = chatMessagesList.querySelectorAll('.chat-message');
+            if (tabName === 'friends') {
+                // For friends tab, filter logic can be added
+                messages.forEach(msg => msg.style.display = '');
+            } else {
+                messages.forEach(msg => msg.style.display = '');
+            }
+        };
+    });
+    
+    // Expose functions to window
     window.sendFriendRequestFromPopup = (userId, username) => {
         sendFriendRequest(userId, username);
         friendPopup.classList.remove('open');
+        overlay.classList.remove('open');
     };
     
-    // Expose fungsi ke global untuk tombol di popup
+    window.blockUserFromPopup = (userId, username) => {
+        blockUser(userId, username);
+        friendPopup.classList.remove('open');
+        overlay.classList.remove('open');
+        updateChatSelect();
+    };
+    
+    window.unblockUserFromPopup = (userId) => {
+        unblockUser(userId);
+        friendPopup.classList.remove('open');
+        overlay.classList.remove('open');
+        updateChatSelect();
+    };
+    
     window.acceptFriendRequest = acceptFriendRequest;
     window.rejectFriendRequest = rejectFriendRequest;
     
-    // Tutup popup jika klik di luar
-    document.addEventListener('click', (e) => {
-        if (friendPopup.classList.contains('open')) {
-            if (!friendPopup.contains(e.target) && !friendBtn.contains(e.target)) {
-                friendPopup.classList.remove('open');
-            }
-        }
-        if (chatHome.classList.contains('open')) {
-            if (!chatHome.contains(e.target) && !chatHomeBtn.contains(e.target)) {
-                chatHome.classList.remove('open');
-            }
-        }
-    });
+    // Close popups when clicking outside
+    const overlayEl = document.getElementById('overlay');
+    const closeFriendPopupBtn = document.getElementById('closeFriendPopup');
     
-    // Set default username random
+    if (overlayEl) {
+        overlayEl.onclick = () => {
+            friendPopup.classList.remove('open');
+            overlayEl.classList.remove('open');
+        };
+    }
+    
+    if (closeFriendPopupBtn) {
+        closeFriendPopupBtn.onclick = () => {
+            friendPopup.classList.remove('open');
+            if (overlayEl) overlayEl.classList.remove('open');
+        };
+    }
+    
+    // Set default values
     usernameInput.value = "User_" + Math.floor(Math.random() * 900 + 100);
     roomInput.value = "";
     
-    // Cleanup saat halaman ditutup
+    // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
         if (roomRef && myUserId) {
             roomRef.child(`users/${myUserId}`).remove();
@@ -1119,7 +1403,6 @@
         }
     });
     
-    // Handle koneksi internet
     window.addEventListener('online', () => {
         showToast("📡 Koneksi kembali");
         if (!roomRef && currentRoomId) {
@@ -1132,7 +1415,15 @@
         updateStatus("Koneksi putus", currentRoomId);
     });
     
-    console.log('✨ ZOoLY siap! Fitur lengkap: video call, chat, teman, public/private room, random room');
+    // Prevent zoom on double tap
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    console.log('✨ ZOoLY siap! ✨');
+    console.log('Fitur: Video Call | Chat Swipe | Blokir | Teman | Public/Private Room | Suara Join/Leave');
 </script>
 </body>
 </html>
